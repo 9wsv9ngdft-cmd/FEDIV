@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=3';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=4';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=3';
-import { settings, carnet, playSound } from './store.js?v=3';
+} from './sources.js?v=4';
+import { settings, carnet, playSound } from './store.js?v=4';
 
 // ───────────────────────── Outils ─────────────────────────
 
@@ -69,12 +69,25 @@ const visibleFacts = () => [...state.facts.values()].filter(isVisible);
 
 // ───────────────────────── Thème ─────────────────────────
 
+// Styles à l'essai (aperçu par l'adresse : ?style=moderne | police | noir). Sans paramètre : le journal d'origine.
+const STYLES = {
+  moderne: { dark: false, map: { bg: '#f3f3f1', saturation: -1, opacity: 1, brightness: 1, contrast: 0.05 },
+             pins: { light: true }, cluster: ['#111111', '#ffffff', '#ffffff'] },
+  police:  { dark: true, map: { bg: '#0b1a2e', saturation: -0.85, opacity: 0.55, brightness: 0.75, contrast: 0.2 },
+             cluster: ['#f5c518', '#0b1220', '#0b1220'] },
+  noir:    { dark: true, map: { bg: '#000000', saturation: -1, opacity: 1, brightness: 0.38, contrast: 0.35 },
+             cluster: ['#e3262f', '#000000', '#ffffff'] },
+};
+const trialStyle = STYLES[new URLSearchParams(location.search).get('style')] ? new URLSearchParams(location.search).get('style') : null;
+
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => settings.appearance === 'dark' || (settings.appearance === 'auto' && darkQuery.matches);
+const isDark = () => trialStyle ? STYLES[trialStyle].dark
+  : settings.appearance === 'dark' || (settings.appearance === 'auto' && darkQuery.matches);
 
 function applyTheme() {
   const root = document.documentElement;
   root.dataset.theme = isDark() ? 'dark' : 'light';
+  if (trialStyle) root.dataset.style = trialStyle;
   root.dataset.reading = settings.readingSize;
   root.style.setProperty('--age', settings.paperAge);
   if (map?.isStyleLoaded()) styleMap();
@@ -127,6 +140,19 @@ function styleMap() {
   map.setPaintProperty('clusters', 'circle-color', dark ? '#ece5d5' : '#261e16');
   map.setPaintProperty('clusters', 'circle-stroke-color', dark ? '#1d1a16' : '#f6efe0');
   map.setPaintProperty('cluster-count', 'text-color', dark ? '#1d1a16' : '#fdf8ec');
+  const trial = trialStyle && STYLES[trialStyle];
+  if (trial) {
+    const m = trial.map;
+    map.setPaintProperty('paper', 'background-color', m.bg);
+    map.setPaintProperty('ign', 'raster-saturation', m.saturation);
+    map.setPaintProperty('ign', 'raster-opacity', m.opacity);
+    map.setPaintProperty('ign', 'raster-brightness-max', m.brightness);
+    map.setPaintProperty('ign', 'raster-contrast', m.contrast);
+    map.setPaintProperty('points', 'circle-stroke-color', trial.dark ? '#000000' : '#ffffff');
+    map.setPaintProperty('clusters', 'circle-color', trial.cluster[0]);
+    map.setPaintProperty('clusters', 'circle-stroke-color', trial.cluster[1]);
+    map.setPaintProperty('cluster-count', 'text-color', trial.cluster[2]);
+  }
 }
 
 let mapReady = false;
