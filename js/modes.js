@@ -5,7 +5,7 @@ let ctx = null;
 
 /** Garde l'écran allumé pendant la boussole ou la planque (si l'appareil le permet). */
 let wakeLock = null;
-async function keepAwake(on) {
+export async function keepAwake(on) {
   try {
     if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
     else { await wakeLock?.release(); wakeLock = null; }

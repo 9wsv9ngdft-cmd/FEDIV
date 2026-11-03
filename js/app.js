@@ -6,9 +6,10 @@ import {
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
 } from './sources.js?v=26';
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
-import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=32';
+import { initModes, lightRefresh, openCompass, openStakeout, setShake, keepAwake } from './modes.js?v=33';
+import { initAR, openAR } from './ar.js?v=1';
 
-const APP_VERSION = 'version 1.13';
+const APP_VERSION = 'version 1.14';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -1155,7 +1156,7 @@ $('#menu').addEventListener('click', e => {
   const b = e.target.closest('[data-open]');
   if (!b) return;
   closeMenu();
-  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy, board: openBoard, compass: openCompass, stakeout: openStakeout })[b.dataset.open]();
+  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy, board: openBoard, compass: openCompass, stakeout: openStakeout, ar: openAR })[b.dataset.open]();
 });
 
 // ───────────────────────── Recherche ─────────────────────────
@@ -1321,7 +1322,8 @@ function openPrivacy() {
       <dt>COMPTE</dt><dd>Aucun. Pas d’inscription, pas d’adresse e-mail.</dd>
       <dt>SUIVI</dt><dd>Aucun cookie, aucune mesure d’audience, aucune publicité.</dd>
       <dt>CARNET</dt><dd>Tes tampons, ton score et tes réglages sont enregistrés dans ce navigateur seulement (stockage local). Tu peux tout effacer depuis le carnet.</dd>
-      <dt>POSITION</dt><dd>Utilisée seulement si tu touches ◎ ou le mode promenade. Elle sert sur ton appareil, pour les distances et les alertes.</dd>
+      <dt>CAMÉRA</dt><dd>Utilisée seulement dans la vue de rue. L’image s’affiche sur ton écran et n’est jamais enregistrée ni envoyée.</dd>
+      <dt>POSITION</dt><dd>Utilisée seulement si tu touches ◎, la vue de rue ou le mode promenade. Elle sert sur ton appareil, pour les distances et les alertes.</dd>
       <dt>SERVICES</dt><dd>Pour afficher la carte et les récits, l’app interroge des services publics : IGN (fonds de carte, recherche de lieux : seul le texte tapé est envoyé), Wikidata et Wikipédia (sans position), Géorisques (centre de la carte arrondi à environ 1 km), geo.api.gouv.fr et data.gouv.fr (commune du baromètre).</dd>
     </dl>
     <p class="note">Fediv est un projet indépendant, sans lien avec la police, la gendarmerie ni aucun service de l’État.</p>`);
@@ -1403,6 +1405,8 @@ initModes({
   map, state, mapReady: () => mapReady, toast, playSound, openSheet, closeSheet, topBar,
   distance, distanceLabel, isVisible, ensureVisible, openArticle, setMe, loadAriaDetail, fetchWikipediaSummary,
 });
+initAR({ map, state, toast, playSound, closeSheet, distance, distanceLabel, isVisible, ensureVisible, openArticle, setMe, keepAwake });
+$('#arBtn').addEventListener('click', openAR);
 // « Secouer » : sur iPhone, l'autorisation doit suivre un geste ; on la redemande au premier toucher.
 if (settings.shake) {
   if (typeof DeviceMotionEvent?.requestPermission === 'function') document.addEventListener('click', () => setShake(true), { once: true });
