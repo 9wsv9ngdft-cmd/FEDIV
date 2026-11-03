@@ -822,7 +822,87 @@ $('#menu').addEventListener('click', e => {
   const b = e.target.closest('[data-open]');
   if (!b) return;
   closeMenu();
-  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout })[b.dataset.open]();
+  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy })[b.dataset.open]();
+});
+
+// ───────────────────────── Recherche ─────────────────────────
+
+const searchPanel = $('#searchPanel');
+const searchInput = $('#searchInput');
+const searchResults = $('#searchResults');
+const fold = t => (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+let searchTimer = null;
+let searchSeq = 0;
+
+function openSearch() {
+  searchPanel.hidden = false;
+  searchInput.value = '';
+  searchResults.innerHTML = '<li class="hint">Tape le nom d’une ville, d’une rue ou d’une affaire (« Bonnot », « Joconde », « Lyon »…).</li>';
+  setTimeout(() => searchInput.focus(), 50);
+}
+function closeSearch() { searchPanel.hidden = true; searchInput.blur(); }
+$('#searchBtn').addEventListener('click', openSearch);
+$('#searchClose').addEventListener('click', closeSearch);
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement?.tagName !== 'INPUT' && sheet.hidden) { e.preventDefault(); openSearch(); }
+});
+
+searchInput.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 250);
+});
+searchInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); searchResults.querySelector('[data-kind]')?.click(); }
+  if (e.key === 'Escape') closeSearch();
+});
+
+async function runSearch() {
+  const q = searchInput.value.trim();
+  const seq = ++searchSeq;
+  if (q.length < 2) { searchResults.innerHTML = ''; return; }
+  // Récits : dans les archives déjà chargées, par titre ou par lieu.
+  const words = fold(q).split(/\s+/).filter(Boolean);
+  const stories = [];
+  for (const f of state.facts.values()) {
+    const hay = fold(f.title + ' ' + f.place);
+    if (words.every(w => hay.includes(w))) { stories.push(f); if (stories.length >= 40) break; }
+  }
+  stories.sort((a, b) => (b.curated ? 1 : 0) - (a.curated ? 1 : 0) || a.title.length - b.title.length);
+  const storyHTML = stories.slice(0, 8).map(f => `<li><button data-kind="fact" data-id="${esc(f.id)}">
+      <span class="ico">${RUBRIC_BY_ID[f.rubric].icon}</span><span><b>${esc(f.title)}</b><small>${esc(f.category)} · ${esc(f.date)}</small></span></button></li>`).join('');
+  searchResults.innerHTML = (storyHTML ? `<li class="group">Affaires</li>${storyHTML}` : '') + '<li class="group">Lieux</li><li class="hint">Recherche…</li>';
+  // Lieux : géocodage de l'IGN (Géoplateforme). Seul le texte tapé est envoyé.
+  let places = [];
+  try {
+    const r = await fetch(`https://data.geopf.fr/geocodage/search?q=${encodeURIComponent(q)}&limit=6&index=address`);
+    places = (await r.json()).features ?? [];
+  } catch { /* hors ligne */ }
+  if (seq !== searchSeq) return;
+  const placeHTML = places.map(p => {
+    const [lon, lat] = p.geometry.coordinates;
+    const t = p.properties.type;
+    const zoom = t === 'municipality' ? 13 : t === 'street' || t === 'locality' ? 15.5 : 17;
+    return `<li><button data-kind="place" data-lon="${lon}" data-lat="${lat}" data-zoom="${zoom}">
+      <span class="ico">📍</span><span><b>${esc(p.properties.label)}</b><small>${esc(p.properties.context ?? '')}</small></span></button></li>`;
+  }).join('');
+  searchResults.innerHTML = (storyHTML ? `<li class="group">Affaires</li>${storyHTML}` : '')
+    + `<li class="group">Lieux</li>${placeHTML || '<li class="hint">Aucun lieu trouvé (ou pas de connexion).</li>'}`;
+}
+
+searchResults.addEventListener('click', e => {
+  const b = e.target.closest('[data-kind]');
+  if (!b) return;
+  closeSearch();
+  if (b.dataset.kind === 'place') {
+    map.flyTo({ center: [Number(b.dataset.lon), Number(b.dataset.lat)], zoom: Number(b.dataset.zoom) });
+    playSound('page');
+  } else {
+    const f = state.facts.get(b.dataset.id);
+    if (!f) return;
+    ensureVisible(f);
+    map.flyTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 15) });
+    showTeaser(f);
+  }
 });
 
 // ───────────────────────── Réglages ─────────────────────────
@@ -881,7 +961,22 @@ function openAbout() {
     </dl>
     <h3 class="section-title">Règles du journal</h3>
     <div class="article-body"><p>Fediv n’affiche pas les noms de victimes, de mineurs ou de personnes simplement mises en cause : les affaires criminelles récentes sont titrées par la nature des faits et le lieu, et la source reste accessible en un clic. Les positions des accidents industriels et des arrêtés CatNat sont approximatives (centre de la commune).</p></div>
-    <p class="note">Fediv — version web. Données sous Licence ouverte Etalab, CC BY-SA (Wikipédia) et CC0 (Wikidata).</p>`);
+    <h3 class="section-title">Une erreur ?</h3>
+    <div class="article-body"><p>Un récit mal placé, une date fausse, un nom qui ne devrait pas apparaître ? Signale-le sur <a href="https://github.com/9wsv9ngdft-cmd/FEDIV/issues" target="_blank" rel="noopener">la page du projet</a>.</p></div>
+    <p class="note">Fediv est un projet indépendant, sans lien avec la police, la gendarmerie ni aucun service de l’État. Données sous Licence ouverte Etalab, CC BY-SA (Wikipédia) et CC0 (Wikidata). Fonds de carte © IGN.</p>`);
+}
+
+function openPrivacy() {
+  openSheet(`${topBar('🔒 Confidentialité')}
+    <h2 class="headline" style="font-size:32px">Tes données restent chez toi</h2>
+    <dl class="fact-sheet">
+      <dt>COMPTE</dt><dd>Aucun. Pas d’inscription, pas d’adresse e-mail.</dd>
+      <dt>SUIVI</dt><dd>Aucun cookie, aucune mesure d’audience, aucune publicité.</dd>
+      <dt>CARNET</dt><dd>Tes tampons, ton score et tes réglages sont enregistrés dans ce navigateur seulement (stockage local). Tu peux tout effacer depuis le carnet.</dd>
+      <dt>POSITION</dt><dd>Utilisée seulement si tu touches ◎ ou le mode promenade. Elle sert sur ton appareil, pour les distances et les alertes.</dd>
+      <dt>SERVICES</dt><dd>Pour afficher la carte et les récits, l’app interroge des services publics : IGN (fonds de carte, recherche de lieux : seul le texte tapé est envoyé), Wikidata et Wikipédia (sans position), Géorisques (centre de la carte arrondi à environ 1 km), geo.api.gouv.fr et data.gouv.fr (commune du baromètre).</dd>
+    </dl>
+    <p class="note">Fediv est un projet indépendant, sans lien avec la police, la gendarmerie ni aucun service de l’État.</p>`);
 }
 
 // ───────────────────────── Accueil ─────────────────────────
@@ -908,11 +1003,32 @@ applyTheme();
 renderEraBar();
 renderRubricBar();
 
+function hideSplash() {
+  const el = $('#splash');
+  if (!el || el.classList.contains('gone')) return;
+  el.classList.add('gone');
+  setTimeout(() => el.remove(), 600);
+}
+setTimeout(hideSplash, 6000); // au pire, on n'attend pas plus
+
+function updateOnline() { $('#offlineBanner').hidden = navigator.onLine; }
+window.addEventListener('online', updateOnline);
+window.addEventListener('offline', updateOnline);
+updateOnline();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+// Toucher le titre ramène à la vue de toute la France.
+$('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 46.6], zoom: window.innerWidth < 600 ? 4.6 : 5.4 }));
+
 async function start() {
-  track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
+  const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
+  Promise.all([base, new Promise(r => (mapReady ? r() : map.once('load', r)))]).then(() => setTimeout(hideSplash, 250));
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
   setTimeout(async () => {
-    await track('wikidata', fetchWikidataEvents().then(addFacts));
+    await track('wikidata', fetchWikidataEvents().then(addFacts).catch(() => toast('Wikidata ne répond pas : une partie des affaires manquera pour l’instant.')));
     track('located', fetchWikidataLocatedEvents().then(addFacts));
   }, 800);
 

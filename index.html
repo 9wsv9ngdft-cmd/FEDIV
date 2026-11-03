@@ -6,6 +6,22 @@
   <title>Fediv — les faits divers autour de vous</title>
   <meta name="description" content="Fediv : une carte des faits divers, crimes, accidents et grandes affaires de France, racontés comme dans un vieux journal.">
   <meta name="theme-color" content="#d6bf93">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Fediv">
+  <link rel="canonical" href="https://9wsv9ngdft-cmd.github.io/FEDIV/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:site_name" content="Fediv">
+  <meta property="og:title" content="Fediv — les faits divers autour de vous">
+  <meta property="og:description" content="Grandes affaires, accidents, incendies, catastrophes : la carte des faits divers de France, à l'endroit même où ils se sont produits.">
+  <meta property="og:url" content="https://9wsv9ngdft-cmd.github.io/FEDIV/">
+  <meta property="og:image" content="https://9wsv9ngdft-cmd.github.io/FEDIV/icons/partage.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Fediv : une épingle de carte avec une empreinte digitale, sur un ruban de scène de crime">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png?v=2">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png?v=2">
   <link rel="apple-touch-icon" href="icons/icon-180.png?v=2">
@@ -14,10 +30,18 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&family=Special+Elite&family=Permanent+Marker&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link href="css/style.css?v=13" rel="stylesheet">
+  <link href="css/style.css?v=14" rel="stylesheet">
 </head>
 <body>
-  <div id="map" aria-label="Carte des faits divers"></div>
+  <!-- Écran d'ouverture -->
+  <div class="splash" id="splash" role="status" aria-live="polite">
+    <img src="icons/icon-192.png?v=2" alt="" width="96" height="96">
+    <div class="splash-name">FEDIV</div>
+    <div class="splash-gyro"></div>
+    <p class="splash-text">Ouverture du dossier…</p>
+  </div>
+
+  <div id="map" role="application" aria-label="Carte des faits divers"></div>
 
   <!-- En-tête -->
   <header class="masthead paper">
@@ -26,8 +50,20 @@
       <h1>Fediv</h1>
       <p class="dateline" id="todayLine"></p>
     </div>
+    <button class="icon-btn" id="searchBtn" aria-label="Rechercher une ville ou une affaire">⌕</button>
     <button class="icon-btn" id="settingsBtn" aria-label="Réglages">⚙</button>
   </header>
+
+  <!-- Recherche -->
+  <div class="search-panel" id="searchPanel" hidden role="search">
+    <div class="search-row">
+      <input type="search" id="searchInput" placeholder="Une ville, une adresse, une affaire…" autocomplete="off" enterkeyhint="search" aria-label="Rechercher">
+      <button class="close-btn" id="searchClose" aria-label="Fermer la recherche">✕</button>
+    </div>
+    <ul class="search-results" id="searchResults" aria-live="polite"></ul>
+  </div>
+
+  <div class="offline-banner" id="offlineBanner" hidden role="status">Hors ligne : la carte et les archives déjà ouvertes restent consultables.</div>
 
   <!-- Filtres -->
   <nav class="filters">
@@ -72,6 +108,7 @@
     <button data-open="barometer"><span>📊</span><b>Le baromètre</b><small>Délinquance enregistrée dans la commune</small></button>
     <button data-open="walk"><span>🚶</span><b id="walkLabel">Mode promenade</b><small>Être prévenu en passant près d'un lieu</small></button>
     <button data-open="about"><span>ℹ</span><b>À propos et sources</b><small>D'où viennent les récits</small></button>
+    <button data-open="privacy"><span>🔒</span><b>Confidentialité</b><small>Ce que l'app fait (et ne fait pas) de tes données</small></button>
   </nav>
 
   <!-- Fenêtres plein écran -->
@@ -79,9 +116,9 @@
     <div class="sheet-inner paper" id="sheetInner"></div>
   </section>
 
-  <div class="toast" id="toast" hidden></div>
+  <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=11"></script>
+  <script type="module" src="js/app.js?v=12"></script>
 </body>
 </html>

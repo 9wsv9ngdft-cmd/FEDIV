@@ -304,7 +304,7 @@ export const CRIME_RESOURCES = {
 export async function communeAt(lat, lon) {
   for (const type of ['arrondissement-municipal', 'commune-actuelle']) {
     try {
-      const list = await getJSON(`https://geo.api.gouv.fr/communes?lat=${lat.toFixed(3)}&lon=${lon.toFixed(3)}&type=${type}&fields=nom,code,codeDepartement`);
+      const list = await getJSON(`https://geo.api.gouv.fr/communes?lat=${lat.toFixed(2)}&lon=${lon.toFixed(2)}&type=${type}&fields=nom,code,codeDepartement`);
       if (list[0]) return list[0];
     } catch { /* type suivant */ }
   }
