@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=8';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=9';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=8';
-import { settings, carnet, playSound } from './store.js?v=8';
+} from './sources.js?v=9';
+import { settings, carnet, playSound } from './store.js?v=9';
 
 // ───────────────────────── Outils ─────────────────────────
 
@@ -69,37 +69,24 @@ const visibleFacts = () => [...state.facts.values()].filter(isVisible);
 
 // ───────────────────────── Thème ─────────────────────────
 
-// Styles à l'essai (aperçu par l'adresse : ?style=moderne | police | noir). Sans paramètre : le journal d'origine.
+// Style « Dossier de police » : version jour (kraft) en mode clair, version nuit en mode sombre.
 const STYLES = {
-  moderne: { dark: false, map: { bg: '#f3f3f1', saturation: -1, opacity: 1, brightness: 1, contrast: 0.05 },
-             pins: { light: true }, cluster: ['#111111', '#ffffff', '#ffffff'] },
-  police:  { dark: true, map: { bg: '#0b1a2e', saturation: -0.85, opacity: 0.55, brightness: 0.75, contrast: 0.2 },
-             cluster: ['#f5c518', '#0b1220', '#0b1220'] },
-  'police-kraft':   { dark: false, map: { bg: '#c9b48a', saturation: -0.9, opacity: 0.72, brightness: 1, contrast: 0.1 },
-                      cluster: ['#1d1a16', '#efe3c8', '#f5c518'] },
-  'police-tableau': { dark: true, map: { bg: '#10202e', saturation: -0.9, opacity: 0.5, brightness: 0.8, contrast: 0.15 },
-                      cluster: ['#fbfaf5', '#c0392b', '#1d1a16'] },
-  'police-gyro':    { dark: true, map: { bg: '#020a18', saturation: -1, opacity: 0.42, brightness: 0.85, contrast: 0.3 },
-                      cluster: ['#2f8bff', '#ff2e3c', '#ffffff'] },
-  'police-mix-jour': { dark: false, map: { bg: '#c9b48a', saturation: -0.9, opacity: 0.7, brightness: 1, contrast: 0.12 },
-                       cluster: ['#14181f', '#f5c518', '#f5c518'] },
-  'police-mix-nuit': { dark: true, map: { bg: '#071427', saturation: -1, opacity: 0.45, brightness: 0.85, contrast: 0.25 },
-                       cluster: ['#f5c518', '#14181f', '#14181f'] },
-  noir:    { dark: true, map: { bg: '#000000', saturation: -1, opacity: 1, brightness: 0.38, contrast: 0.35 },
-             cluster: ['#e3262f', '#000000', '#ffffff'] },
+  jour: { dark: false, map: { bg: '#c9b48a', saturation: -0.9, opacity: 0.7, brightness: 1, contrast: 0.12 },
+          stroke: '#ffffff', cluster: ['#14181f', '#f5c518', '#f5c518'], theme: '#d6bf93' },
+  nuit: { dark: true, map: { bg: '#071427', saturation: -1, opacity: 0.45, brightness: 0.85, contrast: 0.25 },
+          stroke: '#ffffff', cluster: ['#f5c518', '#14181f', '#14181f'], theme: '#0b1320' },
 };
-const trialStyle = STYLES[new URLSearchParams(location.search).get('style')] ? new URLSearchParams(location.search).get('style') : null;
 
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
-const isDark = () => trialStyle ? STYLES[trialStyle].dark
-  : settings.appearance === 'dark' || (settings.appearance === 'auto' && darkQuery.matches);
+const currentStyle = () => (settings.appearance === 'dark' || (settings.appearance === 'auto' && darkQuery.matches) ? 'nuit' : 'jour');
+const isDark = () => STYLES[currentStyle()].dark;
 
 function applyTheme() {
   const root = document.documentElement;
   root.dataset.theme = isDark() ? 'dark' : 'light';
-  if (trialStyle) root.dataset.style = trialStyle;
+  root.dataset.style = currentStyle();
   root.dataset.reading = settings.readingSize;
-  root.style.setProperty('--age', settings.paperAge);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', STYLES[currentStyle()].theme);
   if (map?.isStyleLoaded()) styleMap();
 }
 darkQuery.addEventListener('change', applyTheme);
@@ -136,34 +123,19 @@ map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom
 
 function styleMap() {
   if (!map.getLayer('points')) return;
-  const dark = isDark();
-  const engraved = settings.engravedMap;
-  map.setPaintProperty('paper', 'background-color', dark ? '#1d1a16' : engraved ? '#e6d3ab' : '#f2efe9');
-  map.setPaintProperty('ign', 'raster-saturation', engraved ? -0.75 : dark ? -0.4 : 0);
-  map.setPaintProperty('ign', 'raster-opacity', engraved && !dark ? 0.78 : 1);
-  map.setPaintProperty('ign', 'raster-brightness-max', dark ? 0.42 : 1);
-  map.setPaintProperty('ign', 'raster-contrast', dark ? 0.15 : engraved ? 0.08 : 0);
-  const colors = MAP_COLORS[dark ? 'dark' : 'light'];
-  const match = ['match', ['get', 'r'], ...Object.entries(colors).flat(), '#777'];
-  map.setPaintProperty('points', 'circle-color', match);
-  map.setPaintProperty('points', 'circle-stroke-color', dark ? '#1d1a16' : '#fffaf0');
-  map.setPaintProperty('clusters', 'circle-color', dark ? '#ece5d5' : '#261e16');
-  map.setPaintProperty('clusters', 'circle-stroke-color', dark ? '#1d1a16' : '#f6efe0');
-  map.setPaintProperty('cluster-count', 'text-color', dark ? '#1d1a16' : '#fdf8ec');
-  const trial = trialStyle && STYLES[trialStyle];
-  if (trial) {
-    const m = trial.map;
-    map.setPaintProperty('paper', 'background-color', m.bg);
-    map.setPaintProperty('ign', 'raster-saturation', m.saturation);
-    map.setPaintProperty('ign', 'raster-opacity', m.opacity);
-    map.setPaintProperty('ign', 'raster-brightness-max', m.brightness);
-    map.setPaintProperty('ign', 'raster-contrast', m.contrast);
-    map.setPaintProperty('points', 'circle-stroke-color', ['police-gyro', 'police-mix-nuit'].includes(trialStyle) ? '#ffffff' : trial.dark ? '#000000' : '#ffffff');
-    if (trialStyle === 'police-gyro') map.setPaintProperty('points', 'circle-stroke-width', 1.5);
-    map.setPaintProperty('clusters', 'circle-color', trial.cluster[0]);
-    map.setPaintProperty('clusters', 'circle-stroke-color', trial.cluster[1]);
-    map.setPaintProperty('cluster-count', 'text-color', trial.cluster[2]);
-  }
+  const style = STYLES[currentStyle()];
+  const m = style.map;
+  map.setPaintProperty('paper', 'background-color', m.bg);
+  map.setPaintProperty('ign', 'raster-saturation', m.saturation);
+  map.setPaintProperty('ign', 'raster-opacity', m.opacity);
+  map.setPaintProperty('ign', 'raster-brightness-max', m.brightness);
+  map.setPaintProperty('ign', 'raster-contrast', m.contrast);
+  const colors = MAP_COLORS[style.dark ? 'dark' : 'light'];
+  map.setPaintProperty('points', 'circle-color', ['match', ['get', 'r'], ...Object.entries(colors).flat(), '#777']);
+  map.setPaintProperty('points', 'circle-stroke-color', style.stroke);
+  map.setPaintProperty('clusters', 'circle-color', style.cluster[0]);
+  map.setPaintProperty('clusters', 'circle-stroke-color', style.cluster[1]);
+  map.setPaintProperty('cluster-count', 'text-color', style.cluster[2]);
 }
 
 let mapReady = false;
@@ -828,9 +800,7 @@ function openSettings() {
   openSheet(`${topBar('⚙ Réglages')}
     <h2 class="headline" style="font-size:32px">Réglages</h2>
     <div class="settings-group"><h4>Affichage</h4>
-      ${row('◐', '#1c1c1e', 'Apparence', `<select id="setAppearance"><option value="auto">Automatique</option><option value="light">Clair</option><option value="dark">Sombre</option></select>`)}
-      ${row('📜', '#a2845e', 'Papier jauni', `<input type="range" id="setAge" min="0" max="1" step="0.05">`)}
-      ${row('🗺', '#34a853', 'Carte façon gravure', `<input type="checkbox" class="switch" id="setEngraved">`)}
+      ${row('◐', '#1c1c1e', 'Apparence', `<select id="setAppearance"><option value="auto">Automatique</option><option value="light">Jour (dossier kraft)</option><option value="dark">Nuit (gyrophare)</option></select>`)}
     </div>
     <div class="settings-group"><h4>Son</h4>
       ${row('🔔', '#ff3b30', 'Bruitages', `<input type="checkbox" class="switch" id="setSound">`)}
@@ -854,8 +824,6 @@ function openSettings() {
     });
   };
   bind('#setAppearance', 'appearance');
-  bind('#setAge', 'paperAge');
-  bind('#setEngraved', 'engravedMap', 'checked');
   bind('#setSound', 'sound', 'checked', () => playSound('bell'));
   bind('#setVolume', 'volume', 'value', () => playSound('typewriter'));
   bind('#setReading', 'readingSize');

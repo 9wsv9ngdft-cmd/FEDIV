@@ -7,8 +7,6 @@ const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(v
 
 export const settings = {
   appearance: read('fediv.appearance', 'auto'),   // auto | light | dark
-  paperAge: read('fediv.paperAge', 0.25),          // 0 = papier frais, 1 = jauni
-  engravedMap: read('fediv.engravedMap', true),
   sound: read('fediv.sound', true),
   volume: read('fediv.volume', 0.5),
   readingSize: read('fediv.readingSize', 'normal'), // small | normal | large

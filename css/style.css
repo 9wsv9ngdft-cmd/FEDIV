@@ -262,50 +262,9 @@ a { color: var(--red); }
   .maplibregl-ctrl-bottom-left { left: 380px; }
 }
 
-/* ═════════════════════ Styles à l'essai (?style=…) ═════════════════════ */
 
-/* ── 1. Édition moderne : blanc, noir, rouge vif, typographie éditoriale contemporaine ── */
-:root[data-style='moderne'] {
-  --cream: #ffffff; --sheet: #f5f5f3; --ink: #111111; --faded: #6b6b6b; --rule: #dcdcdc;
-  --red: #e10600; --ember: #ff6a00; --amber: #c99700; --navy: #1f4bd8; --slate: #111111; --moss: #1c8a4b;
-  --title: 'Archivo Black', 'Helvetica Neue', Arial, sans-serif;
-  --body: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif;
-  --type: 'IBM Plex Mono', Menlo, monospace;
-  --texture: 0; --shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
-}
-[data-style='moderne'] .masthead { border-bottom: 1px solid var(--rule); box-shadow: none; }
-[data-style='moderne'] .masthead h1 { font-size: 26px; letter-spacing: -0.5px; text-transform: lowercase; }
-[data-style='moderne'] .masthead h1::after { content: '.'; color: var(--red); }
-[data-style='moderne'] .dateline { letter-spacing: 0.5px; }
-[data-style='moderne'] .icon-btn, [data-style='moderne'] .round-btn { border-color: var(--rule); background: #fff; }
-[data-style='moderne'] .chip { border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.12); border-width: 1px; font-family: var(--body); font-weight: 600; font-size: 12.5px; }
-[data-style='moderne'] .chip:not(.off):not(.reset) { border-color: var(--chip); box-shadow: inset 0 -3px 0 var(--chip), 0 1px 3px rgba(0,0,0,.12); }
-[data-style='moderne'] .chip.reset { background: var(--ink); border-color: var(--ink); }
-[data-style='moderne'] .era-bar .chip.on { background: var(--red); border-color: var(--red); color: #fff; }
-[data-style='moderne'] .chronicle.torn { clip-path: none; padding-top: 0; border-radius: 18px 18px 0 0; }
-[data-style='moderne'] .chronicle-head { border-bottom: 2px solid var(--ink); }
-[data-style='moderne'] .chronicle-head h2 { font-size: 21px; letter-spacing: -0.3px; }
-[data-style='moderne'] .clipping { transform: none !important; border: 0; border-bottom: 1px solid var(--rule); border-left: 0; background: transparent; box-shadow: none; padding: 12px 2px; }
-[data-style='moderne'] .clipping .meta span:first-child { color: var(--tint); font-weight: 600; text-transform: uppercase; font-size: 10.5px; letter-spacing: .5px; }
-[data-style='moderne'] .clipping h3 { font-family: var(--body); font-weight: 800; font-size: 16.5px; letter-spacing: -0.2px; }
-[data-style='moderne'] .teaser { border-radius: 14px; border: 0; border-top: 0; }
-[data-style='moderne'] .teaser .kicker { color: var(--tint); }
-[data-style='moderne'] .btn { border-radius: 8px; font-family: var(--body); font-weight: 600; }
-[data-style='moderne'] .kicker { font-family: var(--body); letter-spacing: 1px; }
-[data-style='moderne'] .front-masthead { border-bottom: 2px solid var(--ink); }
-[data-style='moderne'] .front-masthead .name { letter-spacing: -1px; text-transform: lowercase; }
-[data-style='moderne'] .front-masthead .name::after { content: '.'; color: var(--red); }
-[data-style='moderne'] .headline { letter-spacing: -0.8px; line-height: 1.02; }
-[data-style='moderne'] .subhead { font-family: var(--body); font-style: normal; font-size: 16px; }
-[data-style='moderne'] .article-body { text-align: left; line-height: 1.6; }
-[data-style='moderne'] .article-body p:first-of-type::first-letter { float: none; font-size: inherit; padding: 0; color: inherit; font-family: inherit; font-weight: 800; }
-[data-style='moderne'] .engraving { border: 0; padding: 0; background: none; }
-[data-style='moderne'] .engraving img { filter: none; border-radius: 10px; }
-[data-style='moderne'] .fact-sheet { border: 0; background: var(--sheet); border-radius: 10px; }
-[data-style='moderne'] .stamp { border-radius: 6px; }
-
-/* ── 2. Dossier de police : bleu nuit, ruban jaune, étiquettes de pièces à conviction ── */
-:root[data-style^='police'] {
+/* ═════════════ Style « Dossier de police » : socle (rubans, étiquettes, titres) ═════════════ */
+:root[data-style] {
   --cream: #121a26; --sheet: #1a2433; --ink: #e8edf4; --faded: #93a1b5; --rule: #2c3a4f;
   --red: #ff4d3d; --ember: #ff8a3d; --amber: #f5c518; --navy: #5aa9ff; --slate: #c9d3e0; --moss: #5fd38d;
   --tape: #f5c518;
@@ -314,212 +273,47 @@ a { color: var(--red); }
   --type: 'IBM Plex Mono', Menlo, monospace;
   --texture: 0; --shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
-[data-style^='police'] .paper::before { opacity: 0; }
-[data-style^='police'] .masthead { border-bottom: 0; box-shadow: 0 4px 0 0 var(--tape), 0 6px 14px rgba(0,0,0,.4); }
-[data-style^='police'] .masthead::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 8px;
+[data-style] .paper::before { opacity: 0; }
+[data-style] .masthead { border-bottom: 0; box-shadow: 0 4px 0 0 var(--tape), 0 6px 14px rgba(0,0,0,.4); }
+[data-style] .masthead::after { content: ''; position: absolute; left: 0; right: 0; bottom: -10px; height: 8px;
   background: repeating-linear-gradient(-45deg, var(--tape) 0 12px, #111 12px 24px); }
-[data-style^='police'] .masthead h1 { text-transform: uppercase; letter-spacing: 6px; font-weight: 700; font-size: 26px; }
-[data-style^='police'] .dateline { color: var(--tape); }
-[data-style^='police'] .filters { top: calc(var(--header-h) + var(--safe-top) + 14px); }
-[data-style^='police'] .icon-btn, [data-style^='police'] .round-btn { background: var(--sheet); border-color: var(--rule); color: var(--ink); }
-[data-style^='police'] .chip { border-radius: 4px; background: var(--sheet); font-family: var(--type); font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; border-width: 1px; }
-[data-style^='police'] .chip:not(.off):not(.reset)::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--chip); box-shadow: 0 0 8px var(--chip); }
-[data-style^='police'] .chip.reset { background: var(--tape); border-color: var(--tape); color: #111; }
-[data-style^='police'] .era-bar .chip.on { background: var(--tape); border-color: var(--tape); color: #111; }
-[data-style^='police'] .chronicle.torn { clip-path: none; padding-top: 0; border-top: 3px solid var(--tape); }
-[data-style^='police'] .chronicle-head { border-bottom: 1px solid var(--rule); }
-[data-style^='police'] .chronicle-head h2 { text-transform: uppercase; letter-spacing: 1px; }
-[data-style^='police'] .kicker { color: var(--tape); font-family: var(--type); letter-spacing: 2px; }
-[data-style^='police'] .clipping { transform: none !important; border-radius: 6px; border: 1px solid var(--rule); border-left: 4px solid var(--tint); box-shadow: none; }
-[data-style^='police'] .clipping .meta { text-transform: uppercase; font-size: 10px; letter-spacing: .5px; }
-[data-style^='police'] .clipping h3 { font-family: var(--body); font-weight: 600; font-size: 15.5px; }
-[data-style^='police'] .teaser { border-radius: 8px; border-top: 0; overflow: hidden; padding-top: 22px; }
-[data-style^='police'] .teaser::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 10px; background: repeating-linear-gradient(-45deg, var(--tape) 0 10px, #111 10px 20px); }
-[data-style^='police'] .teaser h3 { text-transform: uppercase; letter-spacing: .3px; }
-[data-style^='police'] .btn { border-radius: 4px; border-color: var(--rule); background: var(--sheet); color: var(--ink); font-family: var(--type); text-transform: uppercase; font-size: 12px; }
-[data-style^='police'] .btn.primary { background: var(--tape); border-color: var(--tape); color: #111; }
-[data-style^='police'] .front-masthead { border-bottom: 0; padding-bottom: 14px; background: repeating-linear-gradient(-45deg, var(--tape) 0 12px, #111 12px 24px) bottom / 100% 8px no-repeat; }
-[data-style^='police'] .front-masthead .name { text-transform: uppercase; letter-spacing: 10px; font-weight: 700; }
-[data-style^='police'] .front-masthead .name::before { content: 'DOSSIER · '; font-size: .35em; letter-spacing: 4px; vertical-align: middle; color: var(--tape); }
-[data-style^='police'] .front-masthead .sub { border-top-color: var(--rule); }
-[data-style^='police'] .headline { text-transform: uppercase; letter-spacing: .5px; line-height: 1.05; }
-[data-style^='police'] .subhead { font-family: var(--type); font-style: normal; font-size: 13px; color: var(--tape); }
-[data-style^='police'] .article-body { text-align: left; }
-[data-style^='police'] .article-body p:first-of-type::first-letter { color: var(--tape); font-weight: 700; }
-[data-style^='police'] .engraving { background: #fff; padding: 8px 8px 26px; transform: rotate(-1.2deg); box-shadow: 0 8px 20px rgba(0,0,0,.5); border: 0; }
-[data-style^='police'] .engraving img { filter: grayscale(.6) contrast(1.1); }
-[data-style^='police'] .engraving figcaption { color: #333; }
-[data-style^='police'] .fact-sheet { border: 1px solid var(--rule); background: var(--sheet); border-radius: 6px; }
-[data-style^='police'] .stamp { border-color: var(--tape); color: var(--tape); }
+[data-style] .masthead h1 { text-transform: uppercase; letter-spacing: 6px; font-weight: 700; font-size: 26px; }
+[data-style] .dateline { color: var(--tape); }
+[data-style] .filters { top: calc(var(--header-h) + var(--safe-top) + 14px); }
+[data-style] .icon-btn, [data-style] .round-btn { background: var(--sheet); border-color: var(--rule); color: var(--ink); }
+[data-style] .chip { border-radius: 4px; background: var(--sheet); font-family: var(--type); font-size: 11.5px; text-transform: uppercase; letter-spacing: .5px; border-width: 1px; }
+[data-style] .chip:not(.off):not(.reset)::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--chip); box-shadow: 0 0 8px var(--chip); }
+[data-style] .chip.reset { background: var(--tape); border-color: var(--tape); color: #111; }
+[data-style] .era-bar .chip.on { background: var(--tape); border-color: var(--tape); color: #111; }
+[data-style] .chronicle.torn { clip-path: none; padding-top: 0; border-top: 3px solid var(--tape); }
+[data-style] .chronicle-head { border-bottom: 1px solid var(--rule); }
+[data-style] .chronicle-head h2 { text-transform: uppercase; letter-spacing: 1px; }
+[data-style] .kicker { color: var(--tape); font-family: var(--type); letter-spacing: 2px; }
+[data-style] .clipping { transform: none !important; border-radius: 6px; border: 1px solid var(--rule); border-left: 4px solid var(--tint); box-shadow: none; }
+[data-style] .clipping .meta { text-transform: uppercase; font-size: 10px; letter-spacing: .5px; }
+[data-style] .clipping h3 { font-family: var(--body); font-weight: 600; font-size: 15.5px; }
+[data-style] .teaser { border-radius: 8px; border-top: 0; overflow: hidden; padding-top: 22px; }
+[data-style] .teaser::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 10px; background: repeating-linear-gradient(-45deg, var(--tape) 0 10px, #111 10px 20px); }
+[data-style] .teaser h3 { text-transform: uppercase; letter-spacing: .3px; }
+[data-style] .btn { border-radius: 4px; border-color: var(--rule); background: var(--sheet); color: var(--ink); font-family: var(--type); text-transform: uppercase; font-size: 12px; }
+[data-style] .btn.primary { background: var(--tape); border-color: var(--tape); color: #111; }
+[data-style] .front-masthead { border-bottom: 0; padding-bottom: 14px; background: repeating-linear-gradient(-45deg, var(--tape) 0 12px, #111 12px 24px) bottom / 100% 8px no-repeat; }
+[data-style] .front-masthead .name { text-transform: uppercase; letter-spacing: 10px; font-weight: 700; }
+[data-style] .front-masthead .name::before { content: 'DOSSIER · '; font-size: .35em; letter-spacing: 4px; vertical-align: middle; color: var(--tape); }
+[data-style] .front-masthead .sub { border-top-color: var(--rule); }
+[data-style] .headline { text-transform: uppercase; letter-spacing: .5px; line-height: 1.05; }
+[data-style] .subhead { font-family: var(--type); font-style: normal; font-size: 13px; color: var(--tape); }
+[data-style] .article-body { text-align: left; }
+[data-style] .article-body p:first-of-type::first-letter { color: var(--tape); font-weight: 700; }
+[data-style] .engraving { background: #fff; padding: 8px 8px 26px; transform: rotate(-1.2deg); box-shadow: 0 8px 20px rgba(0,0,0,.5); border: 0; }
+[data-style] .engraving img { filter: grayscale(.6) contrast(1.1); }
+[data-style] .engraving figcaption { color: #333; }
+[data-style] .fact-sheet { border: 1px solid var(--rule); background: var(--sheet); border-radius: 6px; }
+[data-style] .stamp { border-color: var(--tape); color: var(--tape); }
 
-/* ── 3. Polar noir : noir et blanc contrasté, rouge sang, titres de film ── */
-:root[data-style='noir'] {
-  --cream: #0a0a0a; --sheet: #141414; --ink: #f1f1f1; --faded: #9a9a9a; --rule: #2a2a2a;
-  --red: #e3262f; --ember: #ff5a36; --amber: #e9b949; --navy: #8fb4ff; --slate: #f1f1f1; --moss: #8fd18f;
-  --title: 'Bebas Neue', 'Oswald', Impact, sans-serif;
-  --body: 'Libre Baskerville', Georgia, serif;
-  --type: 'Special Elite', 'Courier New', monospace;
-  --texture: 0.22; --shadow: 0 12px 36px rgba(0, 0, 0, 0.7);
-}
-[data-style='noir'] .masthead { border-bottom: 3px solid var(--red); }
-[data-style='noir'] .masthead h1 { font-size: 40px; letter-spacing: 8px; font-weight: 400; text-transform: uppercase; }
-[data-style='noir'] .dateline { margin-top: -2px; }
-[data-style='noir'] .icon-btn, [data-style='noir'] .round-btn { background: #000; border-color: #333; }
-[data-style='noir'] .chip { border-radius: 0; background: #000; border-width: 1px; border-color: #333; font-size: 12px; }
-[data-style='noir'] .chip:not(.off):not(.reset) { border-color: var(--ink); }
-[data-style='noir'] .chip.reset { background: var(--red); border-color: var(--red); }
-[data-style='noir'] .era-bar .chip.on { background: var(--ink); color: #000; }
-[data-style='noir'] .chronicle.torn { clip-path: none; padding-top: 0; border-top: 3px solid var(--red); }
-[data-style='noir'] .chronicle-head { border-bottom: 1px solid var(--rule); }
-[data-style='noir'] .chronicle-head h2 { font-size: 30px; font-weight: 400; letter-spacing: 1.5px; text-transform: uppercase; }
-[data-style='noir'] .clipping { transform: none !important; background: transparent; border: 0; border-left: 3px solid var(--red); box-shadow: none; padding: 6px 12px; }
-[data-style='noir'] .clipping h3 { font-size: 22px; font-weight: 400; letter-spacing: .6px; text-transform: uppercase; line-height: 1.05; }
-[data-style='noir'] .teaser { border-radius: 0; background: #000; border: 1px solid #333; border-top: 4px solid var(--red); }
-[data-style='noir'] .teaser h3 { font-size: 30px; font-weight: 400; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
-[data-style='noir'] .btn { border-radius: 0; background: #000; color: var(--ink); border-color: var(--ink); }
-[data-style='noir'] .btn.primary { background: var(--red); border-color: var(--red); color: #fff; }
-[data-style='noir'] .front-masthead { border-bottom: 3px solid var(--red); }
-[data-style='noir'] .front-masthead .name { font-weight: 400; letter-spacing: 14px; font-size: clamp(54px, 16vw, 90px); }
-[data-style='noir'] .headline { font-weight: 400; font-size: clamp(44px, 12vw, 70px); letter-spacing: 1px; line-height: .95; text-transform: uppercase; }
-[data-style='noir'] .subhead { font-family: var(--type); font-style: normal; font-size: 14px; color: var(--red); }
-[data-style='noir'] .article-body p:first-of-type::first-letter { font-weight: 400; font-size: 4.4em; color: var(--red); }
-[data-style='noir'] .engraving { border: 0; padding: 0; background: none; }
-[data-style='noir'] .engraving img { filter: grayscale(1) contrast(1.35) brightness(.9); }
-[data-style='noir'] .fact-sheet { border-color: #333; background: #0f0f0f; }
-[data-style='noir'] .kicker { color: var(--red); font-family: var(--type); }
 
-/* ═════════════ Variantes du « Dossier de police » ═════════════ */
-
-/* ── 2a. Dossier kraft : chemise cartonnée, fiches tapées à la machine, tampons ── */
-:root[data-style='police-kraft'] {
-  --cream: #d6bf93; --sheet: #f3ead6; --ink: #1d1a16; --faded: #5f523f; --rule: #a8895a;
-  --red: #b3261e; --ember: #c25a1c; --amber: #8a6a12; --navy: #1f3d6b; --slate: #1d1a16; --moss: #3d6b2f;
-  --tape: #f5c518;
-  --title: 'Oswald', 'Arial Narrow', sans-serif;
-  --body: 'Libre Baskerville', Georgia, serif;
-  --type: 'Special Elite', 'Courier New', monospace;
-  --shadow: 0 8px 22px rgba(60, 40, 10, 0.35);
-}
-[data-style='police-kraft'] .paper::before { opacity: .55; filter: none; mix-blend-mode: multiply; }
-[data-style='police-kraft'] .masthead h1 { color: var(--ink); }
-[data-style='police-kraft'] .dateline { color: var(--red); }
-[data-style='police-kraft'] .icon-btn, [data-style='police-kraft'] .round-btn { background: var(--sheet); border-color: var(--rule); color: var(--ink); }
-[data-style='police-kraft'] .chip { background: var(--sheet); border-color: var(--rule); color: var(--ink); font-family: var(--type); text-transform: none; }
-[data-style='police-kraft'] .chip.reset, [data-style='police-kraft'] .era-bar .chip.on { background: var(--ink); border-color: var(--ink); color: var(--tape); }
-[data-style='police-kraft'] .chronicle { border-radius: 14px 14px 0 0; }
-[data-style='police-kraft'] .chronicle::after { content: 'AFFAIRES EN COURS'; position: absolute; top: -26px; left: 18px; background: var(--cream); padding: 5px 14px 3px; border-radius: 8px 8px 0 0; font-family: var(--title); font-size: 12px; letter-spacing: 2px; color: var(--ink); }
-[data-style='police-kraft'] .kicker { color: var(--red); }
-[data-style='police-kraft'] .clipping { background: #fffdf6; border: 0; border-left: 0; border-top: 3px solid var(--red); border-radius: 2px; box-shadow: 1px 2px 4px rgba(60,40,10,.25);
-  background-image: repeating-linear-gradient(transparent 0 23px, rgba(80,120,190,.18) 23px 24px); }
-[data-style='police-kraft'] .clipping:nth-child(odd) { transform: rotate(-0.6deg) !important; }
-[data-style='police-kraft'] .clipping:nth-child(even) { transform: rotate(0.5deg) !important; }
-[data-style='police-kraft'] .clipping .meta { font-family: var(--type); text-transform: none; font-size: 11px; color: var(--red); }
-[data-style='police-kraft'] .clipping h3 { font-family: var(--type); font-weight: normal; font-size: 15.5px; }
-[data-style='police-kraft'] .teaser { background: #fffdf6; color: var(--ink); }
-[data-style='police-kraft'] .teaser h3 { font-family: var(--title); }
-[data-style='police-kraft'] .teaser::before { content: 'CONFIDENTIEL'; position: absolute; inset: auto; right: 42px; top: 34px; z-index: 1; border: 3px solid var(--red); border-radius: 0; color: var(--red); font-family: var(--title); font-weight: 700; font-size: 13px; letter-spacing: 3px; padding: 2px 10px; transform: rotate(-9deg); opacity: .5; background: none; }
-[data-style='police-kraft'] .btn { background: var(--sheet); border-color: var(--ink); color: var(--ink); font-family: var(--type); text-transform: none; font-size: 13px; }
-[data-style='police-kraft'] .btn.primary { background: var(--ink); border-color: var(--ink); color: var(--tape); }
-[data-style='police-kraft'] .sheet-inner { background: #f6eedc; }
-[data-style='police-kraft'] .sheet-inner::after { content: 'CONFIDENTIEL'; position: absolute; top: 112px; right: 18px; border: 4px solid var(--red); color: var(--red); font-family: var(--title); font-weight: 700; font-size: 22px; letter-spacing: 4px; padding: 2px 12px; transform: rotate(-11deg); opacity: .5; pointer-events: none; }
-[data-style='police-kraft'] .front-masthead .name { color: var(--ink); }
-[data-style='police-kraft'] .front-masthead .name::before { color: var(--red); }
-[data-style='police-kraft'] .subhead { color: var(--red); font-family: var(--type); }
-[data-style='police-kraft'] .article-body { font-family: var(--type); font-size: calc(var(--read) - 1px); }
-[data-style='police-kraft'] .article-body p:first-of-type::first-letter { color: var(--red); font-family: var(--title); }
-[data-style='police-kraft'] .engraving { transform: rotate(1.5deg); }
-[data-style='police-kraft'] .engraving img { filter: sepia(.35) contrast(1.05); }
-[data-style='police-kraft'] .fact-sheet { background: #fffdf6; border-color: var(--rule); }
-
-/* ── 2b. Tableau d'enquête : liège, fiches punaisées, feutre ── */
-:root[data-style='police-tableau'] {
-  --cream: #8a5d34; --sheet: #fbfaf5; --ink: #f7f2e8; --faded: #e6d6bd; --rule: rgba(0,0,0,.25);
-  --red: #e23b2e; --ember: #ff7f2a; --amber: #f5c518; --navy: #5aa9ff; --slate: #f7f2e8; --moss: #7bd389;
-  --tape: #f5c518; --card-ink: #1d1a16;
-  --title: 'Permanent Marker', 'Marker Felt', cursive;
-  --body: 'Inter', -apple-system, Arial, sans-serif;
-  --type: 'Special Elite', 'Courier New', monospace;
-}
-[data-style='police-tableau'] .paper::before { opacity: 1; filter: none; mix-blend-mode: normal;
-  background-image: radial-gradient(rgba(0,0,0,.18) 1px, transparent 1.6px), radial-gradient(rgba(255,230,190,.12) 1px, transparent 1.4px);
-  background-size: 7px 7px, 11px 11px; background-position: 0 0, 3px 4px; }
-[data-style='police-tableau'] .masthead { background-color: #1b2533; }
-[data-style='police-tableau'] .masthead.paper::before { opacity: 0; }
-[data-style='police-tableau'] .masthead h1 { text-transform: none; letter-spacing: 1px; font-weight: 400; font-size: 30px; color: #fff; }
-[data-style='police-tableau'] .chip { background: var(--sheet); color: var(--card-ink); border-color: transparent; text-transform: none; font-family: var(--type); }
-[data-style='police-tableau'] .chip.off { color: #555; }
-[data-style='police-tableau'] .icon-btn, [data-style='police-tableau'] .round-btn { background: #1b2533; color: #fff; }
-[data-style='police-tableau'] .chronicle { border-top: 10px solid #5b3a1e; }
-[data-style='police-tableau'] .chronicle-head { border-bottom: 2px dashed rgba(255,255,255,.35); }
-[data-style='police-tableau'] .chronicle-head h2 { text-transform: none; letter-spacing: 0; font-weight: 400; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.3); }
-[data-style='police-tableau'] .kicker { color: var(--tape); }
-[data-style='police-tableau'] .status { color: #f3e3c8; }
-[data-style='police-tableau'] .clippings { gap: 16px; padding-top: 18px; }
-[data-style='police-tableau'] .clipping { background: var(--sheet); color: var(--card-ink); border: 0; border-radius: 1px; box-shadow: 2px 4px 8px rgba(0,0,0,.35); padding: 14px 14px 12px; position: relative; overflow: visible; }
-[data-style='police-tableau'] .clipping::before { content: ''; position: absolute; top: -7px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ff8a80, var(--tint) 55%, #5a0d08); box-shadow: 1px 3px 3px rgba(0,0,0,.45); }
-[data-style='police-tableau'] .clipping:nth-child(odd) { transform: rotate(-1.4deg) !important; }
-[data-style='police-tableau'] .clipping:nth-child(even) { transform: rotate(1.2deg) !important; }
-[data-style='police-tableau'] .clipping .meta { color: #6b6257; }
-[data-style='police-tableau'] .clipping h3 { font-family: var(--title); font-weight: 400; font-size: 18px; color: var(--card-ink); }
-[data-style='police-tableau'] .teaser { background: var(--sheet); color: var(--card-ink); border-radius: 2px; transform: rotate(-1deg); padding-top: 26px; }
-[data-style='police-tableau'] .teaser::after { background: none; height: auto; width: 18px; height: 18px; left: 50%; top: -6px; margin-left: -9px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #ff8a80, #e23b2e 55%, #5a0d08); box-shadow: 1px 3px 3px rgba(0,0,0,.45); right: auto; }
-[data-style='police-tableau'] .teaser h3 { font-family: var(--title); font-weight: 400; text-transform: none; font-size: 23px; color: var(--card-ink); }
-[data-style='police-tableau'] .teaser .kicker { color: #c0392b; }
-[data-style='police-tableau'] .teaser .note { color: #6b6257; }
-[data-style='police-tableau'] .btn { background: #fff; color: var(--card-ink); border-color: var(--card-ink); }
-[data-style='police-tableau'] .btn.primary { background: #e23b2e; border-color: #e23b2e; color: #fff; }
-[data-style='police-tableau'] .sheet-inner { background-color: #fbfaf5; color: var(--card-ink); --ink: #1d1a16; --faded: #6b6257; --rule: #d8d2c6; --sheet: #fff; --red: #c0392b; }
-[data-style='police-tableau'] .sheet-inner.paper::before { opacity: 0; }
-[data-style='police-tableau'] .front-masthead .name { text-transform: none; letter-spacing: 2px; font-weight: 400; }
-[data-style='police-tableau'] .front-masthead .name::before { content: 'Affaire · '; color: #c0392b; }
-[data-style='police-tableau'] .headline { text-transform: none; font-weight: 400; color: #1d1a16; }
-[data-style='police-tableau'] .subhead { color: #c0392b; }
-[data-style='police-tableau'] .engraving { transform: rotate(-2deg); }
-[data-style='police-tableau'] .engraving::before { content: ''; position: absolute; top: -10px; left: 50%; width: 90px; height: 24px; margin-left: -45px; background: rgba(245,197,24,.75); transform: rotate(3deg); z-index: 1; }
-[data-style='police-tableau'] .article-body p:first-of-type::first-letter { color: #c0392b; font-weight: 400; }
-[data-style='police-tableau'] .kicker { font-family: var(--type); }
-
-/* ── 2c. Gyrophare : nuit noire, éclats bleu et rouge, écran de patrouille ── */
-:root[data-style='police-gyro'] {
-  --cream: #070a12; --sheet: #0e1422; --ink: #e8f0ff; --faded: #8090ad; --rule: #1d2a42;
-  --red: #ff2e3c; --ember: #ff7a2e; --amber: #ffd23f; --navy: #2f8bff; --slate: #c8d6f0; --moss: #3ee08f;
-  --tape: #2f8bff;
-  --title: 'Oswald', 'Arial Narrow', sans-serif;
-  --body: 'Inter', -apple-system, Arial, sans-serif;
-  --type: 'IBM Plex Mono', Menlo, monospace;
-}
-[data-style='police-gyro'] .masthead { box-shadow: 0 0 22px rgba(47,139,255,.35); }
-[data-style='police-gyro'] .masthead::after { height: 4px; bottom: -4px; background: linear-gradient(90deg, #2f8bff 0 50%, #ff2e3c 50% 100%); box-shadow: 0 0 14px #2f8bff, 0 0 24px rgba(255,46,60,.6); animation: gyro 1.2s steps(1) infinite; }
-@keyframes gyro { 50% { background: linear-gradient(90deg, #ff2e3c 0 50%, #2f8bff 50% 100%); } }
-[data-style='police-gyro'] .masthead h1 { text-shadow: 0 0 12px rgba(47,139,255,.8); }
-[data-style='police-gyro'] .dateline { color: #8fb8ff; }
-[data-style='police-gyro'] .filters { top: calc(var(--header-h) + var(--safe-top) + 8px); }
-[data-style='police-gyro'] .chip { background: rgba(14,20,34,.85); backdrop-filter: blur(6px); border-color: #24324d; }
-[data-style='police-gyro'] .chip:not(.off):not(.reset) { border-color: var(--chip); box-shadow: 0 0 10px color-mix(in srgb, var(--chip) 45%, transparent); }
-[data-style='police-gyro'] .chip.reset { background: #ff2e3c; border-color: #ff2e3c; color: #fff; box-shadow: 0 0 12px rgba(255,46,60,.7); }
-[data-style='police-gyro'] .era-bar .chip.on { background: #2f8bff; border-color: #2f8bff; color: #fff; box-shadow: 0 0 12px rgba(47,139,255,.7); }
-[data-style='police-gyro'] .chronicle { border-top: 0; box-shadow: 0 -2px 0 #2f8bff, 0 -8px 26px rgba(47,139,255,.35); border-radius: 16px 16px 0 0; }
-[data-style='police-gyro'] .kicker { color: #8fb8ff; }
-[data-style='police-gyro'] .clipping { background: linear-gradient(90deg, rgba(47,139,255,.08), transparent 40%), var(--sheet); border-color: #1d2a42; border-left: 3px solid var(--tint); box-shadow: inset 0 0 0 1px rgba(255,255,255,.02); }
-[data-style='police-gyro'] .clipping .meta { color: #8fb8ff; }
-[data-style='police-gyro'] .teaser { background: rgba(10,15,27,.92); backdrop-filter: blur(10px); border: 1px solid #24324d; border-radius: 14px; padding-top: 18px; box-shadow: 0 0 0 1px rgba(47,139,255,.25), 0 14px 40px rgba(0,0,0,.6); }
-[data-style='police-gyro'] .teaser::after { height: 3px; background: linear-gradient(90deg, #2f8bff, #ff2e3c); border-radius: 14px 14px 0 0; }
-[data-style='police-gyro'] .btn { border-radius: 8px; background: #121a2c; border-color: #24324d; }
-[data-style='police-gyro'] .btn.primary { background: #2f8bff; border-color: #2f8bff; color: #fff; box-shadow: 0 0 14px rgba(47,139,255,.55); }
-[data-style='police-gyro'] .front-masthead { background: linear-gradient(90deg, #2f8bff 0 50%, #ff2e3c 50% 100%) bottom / 100% 3px no-repeat; }
-[data-style='police-gyro'] .front-masthead .name { text-shadow: 0 0 18px rgba(47,139,255,.7); }
-[data-style='police-gyro'] .front-masthead .name::before { content: 'ALERTE · '; color: #ff2e3c; text-shadow: 0 0 12px rgba(255,46,60,.8); }
-[data-style='police-gyro'] .subhead { color: #8fb8ff; }
-[data-style='police-gyro'] .article-body p:first-of-type::first-letter { color: #2f8bff; text-shadow: 0 0 14px rgba(47,139,255,.8); }
-[data-style='police-gyro'] .engraving { transform: none; background: none; padding: 0; border: 1px solid #24324d; border-radius: 12px; overflow: hidden; box-shadow: none; }
-[data-style='police-gyro'] .engraving img { filter: saturate(.6) contrast(1.15) brightness(.9); }
-[data-style='police-gyro'] .engraving figcaption { color: var(--faded); padding: 6px 10px; }
-[data-style='police-gyro'] .stamp { border-color: #2f8bff; color: #2f8bff; }
-
-/* ═════════════ Mélange : kraft + fiches punaisées + gyrophare + rubalise ═════════════ */
-:root[data-style^='police-mix'] {
+/* ═════════════ Dossier de police : kraft, fiches punaisées, gyrophare et rubalise (version jour) ═════════════ */
+:root[data-style] {
   --cream: #d6bf93; --sheet: #f3ead6; --ink: #1d1a16; --faded: #5f523f; --rule: #a8895a;
   --red: #c0271d; --ember: #c25a1c; --amber: #8a6a12; --navy: #1f5fd1; --slate: #1d1a16; --moss: #3d6b2f;
   --tape: #f5c518; --card: #fffdf6; --card-ink: #1d1a16; --gyro-blue: #2f8bff; --gyro-red: #ff2e3c;
@@ -530,90 +324,90 @@ a { color: var(--red); }
   --shadow: 0 8px 22px rgba(60, 40, 10, 0.35);
   --rubalise: 'SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME —';
 }
-[data-style^='police-mix'] .paper::before { opacity: .5; filter: none; mix-blend-mode: multiply; }
+[data-style] .paper::before { opacity: .5; filter: none; mix-blend-mode: multiply; }
 
 /* En-tête : gyrophare bleu/rouge et rubalise */
-[data-style^='police-mix'] .masthead { box-shadow: none; border-bottom: 0; }
-[data-style^='police-mix'] .masthead h1 { color: var(--ink); }
-[data-style^='police-mix'] .dateline { color: var(--red); }
-[data-style^='police-mix'] .masthead::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 2; opacity: 1; filter: none; mix-blend-mode: normal;
+[data-style] .masthead { box-shadow: none; border-bottom: 0; }
+[data-style] .masthead h1 { color: var(--ink); }
+[data-style] .dateline { color: var(--red); }
+[data-style] .masthead::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 2; opacity: 1; filter: none; mix-blend-mode: normal;
   background: linear-gradient(90deg, var(--gyro-blue) 0 50%, var(--gyro-red) 50% 100%); box-shadow: 0 0 12px var(--gyro-blue), 0 0 20px rgba(255,46,60,.55);
   animation: gyro-mix 1.1s steps(1) infinite; inset: auto 0 0 0; }
 @keyframes gyro-mix { 50% { background: linear-gradient(90deg, var(--gyro-red) 0 50%, var(--gyro-blue) 50% 100%); box-shadow: 0 0 12px var(--gyro-red), 0 0 20px rgba(47,139,255,.55); } }
-[data-style^='police-mix'] .masthead::after { content: var(--rubalise); left: -20px; right: -20px; bottom: -24px; height: 20px; overflow: hidden; white-space: nowrap;
+[data-style] .masthead::after { content: var(--rubalise); left: -20px; right: -20px; bottom: -24px; height: 20px; overflow: hidden; white-space: nowrap;
   background: var(--tape); color: #111; font-family: var(--title); font-weight: 700; font-size: 11.5px; letter-spacing: 2px; line-height: 20px; text-align: center;
   transform: rotate(-1.2deg); box-shadow: 0 3px 8px rgba(0,0,0,.35); border-top: 1px solid rgba(0,0,0,.25); border-bottom: 1px solid rgba(0,0,0,.25); }
-[data-style^='police-mix'] .filters { top: calc(var(--header-h) + var(--safe-top) + 36px); }
-[data-style^='police-mix'] .map-controls { top: calc(var(--header-h) + var(--safe-top) + 118px); }
+[data-style] .filters { top: calc(var(--header-h) + var(--safe-top) + 36px); }
+[data-style] .map-controls { top: calc(var(--header-h) + var(--safe-top) + 118px); }
 
 /* Étiquettes */
-[data-style^='police-mix'] .icon-btn, [data-style^='police-mix'] .round-btn { background: var(--sheet); border-color: var(--rule); color: var(--ink); }
-[data-style^='police-mix'] .chip { background: var(--sheet); border-color: var(--rule); color: var(--ink); font-family: var(--type); text-transform: none; }
-[data-style^='police-mix'] .chip.reset { background: var(--gyro-red); border-color: var(--gyro-red); color: #fff; box-shadow: 0 0 10px rgba(255,46,60,.55); }
-[data-style^='police-mix'] .era-bar .chip.on { background: var(--ink); border-color: var(--ink); color: var(--tape); }
+[data-style] .icon-btn, [data-style] .round-btn { background: var(--sheet); border-color: var(--rule); color: var(--ink); }
+[data-style] .chip { background: var(--sheet); border-color: var(--rule); color: var(--ink); font-family: var(--type); text-transform: none; }
+[data-style] .chip.reset { background: var(--gyro-red); border-color: var(--gyro-red); color: #fff; box-shadow: 0 0 10px rgba(255,46,60,.55); }
+[data-style] .era-bar .chip.on { background: var(--ink); border-color: var(--ink); color: var(--tape); }
 
 /* Chronique : chemise kraft, fiches punaisées */
-[data-style^='police-mix'] .chronicle { border-radius: 14px 14px 0 0; border-top: 0; }
-[data-style^='police-mix'] .chronicle::after { content: 'AFFAIRES EN COURS'; position: absolute; top: -26px; left: 18px; background: var(--cream); padding: 5px 14px 3px; border-radius: 8px 8px 0 0; font-family: var(--title); font-size: 12px; letter-spacing: 2px; color: var(--ink); }
-[data-style^='police-mix'] .chronicle-head { border-bottom: 2px dashed rgba(0,0,0,.25); }
-[data-style^='police-mix'] .chronicle-head h2 { text-transform: none; font-family: var(--marker); font-weight: 400; letter-spacing: 0; }
-[data-style^='police-mix'] .kicker { color: var(--red); font-family: var(--type); }
-[data-style^='police-mix'] .clippings { gap: 16px; padding-top: 18px; }
-[data-style^='police-mix'] .clipping { background: var(--card); color: var(--card-ink); border: 0; border-top: 3px solid var(--tint); border-radius: 1px; box-shadow: 2px 4px 8px rgba(60,40,10,.3); padding: 14px 14px 12px; position: relative; overflow: visible;
+[data-style] .chronicle { border-radius: 14px 14px 0 0; border-top: 0; }
+[data-style] .chronicle::after { content: 'AFFAIRES EN COURS'; position: absolute; top: -26px; left: 18px; background: var(--cream); padding: 5px 14px 3px; border-radius: 8px 8px 0 0; font-family: var(--title); font-size: 12px; letter-spacing: 2px; color: var(--ink); }
+[data-style] .chronicle-head { border-bottom: 2px dashed rgba(0,0,0,.25); }
+[data-style] .chronicle-head h2 { text-transform: none; font-family: var(--marker); font-weight: 400; letter-spacing: 0; }
+[data-style] .kicker { color: var(--red); font-family: var(--type); }
+[data-style] .clippings { gap: 16px; padding-top: 18px; }
+[data-style] .clipping { background: var(--card); color: var(--card-ink); border: 0; border-top: 3px solid var(--tint); border-radius: 1px; box-shadow: 2px 4px 8px rgba(60,40,10,.3); padding: 14px 14px 12px; position: relative; overflow: visible;
   background-image: repeating-linear-gradient(transparent 0 23px, rgba(80,120,190,.16) 23px 24px); }
-[data-style^='police-mix'] .clipping::before { content: ''; position: absolute; top: -8px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
+[data-style] .clipping::before { content: ''; position: absolute; top: -8px; left: 50%; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%;
   background: radial-gradient(circle at 35% 35%, #ff8a80, var(--gyro-red) 55%, #5a0d08); box-shadow: 1px 3px 3px rgba(0,0,0,.45); }
-[data-style^='police-mix'] .clipping:nth-child(odd) { transform: rotate(-1.1deg) !important; }
-[data-style^='police-mix'] .clipping:nth-child(even) { transform: rotate(0.9deg) !important; }
-[data-style^='police-mix'] .clipping .meta { font-family: var(--type); text-transform: none; font-size: 11px; color: var(--red); }
-[data-style^='police-mix'] .clipping h3 { font-family: var(--marker); font-weight: 400; font-size: 17.5px; color: var(--card-ink); }
+[data-style] .clipping:nth-child(odd) { transform: rotate(-1.1deg) !important; }
+[data-style] .clipping:nth-child(even) { transform: rotate(0.9deg) !important; }
+[data-style] .clipping .meta { font-family: var(--type); text-transform: none; font-size: 11px; color: var(--red); }
+[data-style] .clipping h3 { font-family: var(--marker); font-weight: 400; font-size: 17.5px; color: var(--card-ink); }
 
 /* Aperçu : fiche punaisée, coin de rubalise, tampon */
-[data-style^='police-mix'] .teaser { background: var(--card); color: var(--card-ink); border-radius: 1px; border-top: 0; transform: rotate(-0.8deg); padding-top: 24px; overflow: hidden; }
-[data-style^='police-mix'] .teaser::after { content: 'SCÈNE DE CRIME — NE PAS FRANCHIR'; position: absolute; top: 18px; right: -58px; left: auto; width: 230px; height: 20px; transform: rotate(32deg);
+[data-style] .teaser { background: var(--card); color: var(--card-ink); border-radius: 1px; border-top: 0; transform: rotate(-0.8deg); padding-top: 24px; overflow: hidden; }
+[data-style] .teaser::after { content: 'SCÈNE DE CRIME — NE PAS FRANCHIR'; position: absolute; top: 18px; right: -58px; left: auto; width: 230px; height: 20px; transform: rotate(32deg);
   background: var(--tape); color: #111; font-family: var(--title); font-weight: 700; font-size: 9.5px; letter-spacing: 1.5px; line-height: 20px; text-align: center; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,.3); }
-[data-style^='police-mix'] .teaser::before { content: ''; position: absolute; inset: auto; top: 6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; z-index: 2; opacity: 1; filter: none; mix-blend-mode: normal;
+[data-style] .teaser::before { content: ''; position: absolute; inset: auto; top: 6px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; z-index: 2; opacity: 1; filter: none; mix-blend-mode: normal;
   background: radial-gradient(circle at 35% 35%, #ff8a80, var(--gyro-red) 55%, #5a0d08); box-shadow: 1px 3px 3px rgba(0,0,0,.45); }
-[data-style^='police-mix'] .teaser h3 { font-family: var(--marker); font-weight: 400; text-transform: none; font-size: 22px; color: var(--card-ink); padding-right: 40px; }
-[data-style^='police-mix'] .teaser .kicker { color: var(--red); }
-[data-style^='police-mix'] .teaser .close { color: #333; z-index: 3; }
-[data-style^='police-mix'] .teaser .note { color: #6b6257; }
-[data-style^='police-mix'] .btn { background: var(--sheet); border-color: var(--ink); color: var(--ink); font-family: var(--type); text-transform: none; font-size: 13px; border-radius: 4px; }
-[data-style^='police-mix'] .btn.primary { background: var(--gyro-blue); border-color: var(--gyro-blue); color: #fff; box-shadow: 0 0 12px rgba(47,139,255,.55); }
+[data-style] .teaser h3 { font-family: var(--marker); font-weight: 400; text-transform: none; font-size: 22px; color: var(--card-ink); padding-right: 40px; }
+[data-style] .teaser .kicker { color: var(--red); }
+[data-style] .teaser .close { color: #333; z-index: 3; }
+[data-style] .teaser .note { color: #6b6257; }
+[data-style] .btn { background: var(--sheet); border-color: var(--ink); color: var(--ink); font-family: var(--type); text-transform: none; font-size: 13px; border-radius: 4px; }
+[data-style] .btn.primary { background: var(--gyro-blue); border-color: var(--gyro-blue); color: #fff; box-shadow: 0 0 12px rgba(47,139,255,.55); }
 
 /* Article : dossier kraft, rubalise en travers, photo scotchée, tampon */
-[data-style^='police-mix'] .sheet-inner { background-color: #f6eedc; color: var(--ink); overflow: hidden; }
-[data-style^='police-mix'] .sheet-inner::after { content: 'CONFIDENTIEL'; position: absolute; top: 96px; right: 14px; border: 4px solid var(--red); color: var(--red); font-family: var(--title); font-weight: 700; font-size: 20px; letter-spacing: 4px; padding: 2px 12px; transform: rotate(-11deg); opacity: .45; pointer-events: none; }
-[data-style^='police-mix'] .front-masthead { background: none; padding-bottom: 34px; border-bottom: 0; position: relative; }
-[data-style^='police-mix'] .front-masthead::after { content: var(--rubalise); position: absolute; left: -40px; right: -40px; bottom: 4px; height: 22px; overflow: hidden; white-space: nowrap;
+[data-style] .sheet-inner { background-color: #f6eedc; color: var(--ink); overflow: hidden; }
+[data-style] .sheet-inner::after { content: 'CONFIDENTIEL'; position: absolute; top: 96px; right: 14px; border: 4px solid var(--red); color: var(--red); font-family: var(--title); font-weight: 700; font-size: 20px; letter-spacing: 4px; padding: 2px 12px; transform: rotate(-11deg); opacity: .45; pointer-events: none; }
+[data-style] .front-masthead { background: none; padding-bottom: 34px; border-bottom: 0; position: relative; }
+[data-style] .front-masthead::after { content: var(--rubalise); position: absolute; left: -40px; right: -40px; bottom: 4px; height: 22px; overflow: hidden; white-space: nowrap;
   background: var(--tape); color: #111; font-family: var(--title); font-weight: 700; font-size: 12px; letter-spacing: 2px; line-height: 22px; text-align: center; transform: rotate(-2deg); box-shadow: 0 3px 8px rgba(0,0,0,.3); }
-[data-style^='police-mix'] .front-masthead .name { color: var(--ink); }
-[data-style^='police-mix'] .front-masthead .name::before { content: 'DOSSIER · '; color: var(--red); }
-[data-style^='police-mix'] .front-masthead .sub { border-top-color: var(--rule); }
-[data-style^='police-mix'] .subhead { color: var(--red); font-family: var(--type); }
-[data-style^='police-mix'] .article-body { font-family: var(--type); font-size: calc(var(--read) - 1px); }
-[data-style^='police-mix'] .article-body p:first-of-type::first-letter { color: var(--red); font-family: var(--title); }
-[data-style^='police-mix'] .engraving { background: #fff; padding: 8px 8px 26px; transform: rotate(-1.6deg); box-shadow: 0 8px 20px rgba(60,40,10,.4); border: 0; position: relative; }
-[data-style^='police-mix'] .engraving::before { content: ''; position: absolute; top: -10px; left: 50%; width: 92px; height: 24px; margin-left: -46px; background: rgba(245,197,24,.8); transform: rotate(3deg); z-index: 1; }
-[data-style^='police-mix'] .engraving img { filter: sepia(.25) contrast(1.05); }
-[data-style^='police-mix'] .engraving figcaption { color: #333; }
-[data-style^='police-mix'] .fact-sheet { background: var(--card); border: 0; border-top: 3px solid var(--red); box-shadow: 1px 3px 8px rgba(60,40,10,.25); color: var(--card-ink);
+[data-style] .front-masthead .name { color: var(--ink); }
+[data-style] .front-masthead .name::before { content: 'DOSSIER · '; color: var(--red); }
+[data-style] .front-masthead .sub { border-top-color: var(--rule); }
+[data-style] .subhead { color: var(--red); font-family: var(--type); }
+[data-style] .article-body { font-family: var(--type); font-size: calc(var(--read) - 1px); }
+[data-style] .article-body p:first-of-type::first-letter { color: var(--red); font-family: var(--title); }
+[data-style] .engraving { background: #fff; padding: 8px 8px 26px; transform: rotate(-1.6deg); box-shadow: 0 8px 20px rgba(60,40,10,.4); border: 0; position: relative; }
+[data-style] .engraving::before { content: ''; position: absolute; top: -10px; left: 50%; width: 92px; height: 24px; margin-left: -46px; background: rgba(245,197,24,.8); transform: rotate(3deg); z-index: 1; }
+[data-style] .engraving img { filter: sepia(.25) contrast(1.05); }
+[data-style] .engraving figcaption { color: #333; }
+[data-style] .fact-sheet { background: var(--card); border: 0; border-top: 3px solid var(--red); box-shadow: 1px 3px 8px rgba(60,40,10,.25); color: var(--card-ink);
   background-image: repeating-linear-gradient(transparent 0 25px, rgba(80,120,190,.16) 25px 26px); }
-[data-style^='police-mix'] .stamp { border-color: var(--red); color: var(--red); }
+[data-style] .stamp { border-color: var(--red); color: var(--red); }
 
 /* ── Version nuit : carte et bandeaux nocturnes, fiches et dossier kraft ── */
-:root[data-style='police-mix-nuit'] { --ink: #eef2f8; --faded: #b8c2d4; --rule: #2c3a4f; --cream: #101a2a; --sheet: #182235; }
-[data-style='police-mix-nuit'] .paper::before { opacity: 0; }
-[data-style='police-mix-nuit'] .masthead { background-color: #0b1320; }
-[data-style='police-mix-nuit'] .masthead h1 { color: #fff; text-shadow: 0 0 12px rgba(47,139,255,.6); }
-[data-style='police-mix-nuit'] .dateline { color: var(--tape); }
-[data-style='police-mix-nuit'] .masthead::before { height: 5px; opacity: 1; }
-[data-style='police-mix-nuit'] .chip { background: rgba(16,26,42,.88); color: #eef2f8; border-color: #2c3a4f; backdrop-filter: blur(6px); }
-[data-style='police-mix-nuit'] .chip:not(.off):not(.reset) { border-color: var(--chip); box-shadow: 0 0 8px color-mix(in srgb, var(--chip) 45%, transparent); }
-[data-style='police-mix-nuit'] .era-bar .chip.on { background: var(--tape); color: #111; border-color: var(--tape); }
-[data-style='police-mix-nuit'] .icon-btn, [data-style='police-mix-nuit'] .round-btn { background: #182235; color: #fff; border-color: #2c3a4f; }
-[data-style='police-mix-nuit'] .chronicle { background-color: #c9ae7c; --ink: #1d1a16; --faded: #4f4434; color: #1d1a16; box-shadow: 0 -2px 0 var(--gyro-blue), 0 -10px 30px rgba(47,139,255,.3); }
-[data-style='police-mix-nuit'] .chronicle.paper::before { opacity: .5; }
-[data-style='police-mix-nuit'] .chronicle::after { background: #c9ae7c; color: #1d1a16; }
-[data-style='police-mix-nuit'] .sheet-inner { background-color: #f6eedc; --ink: #1d1a16; --faded: #5f523f; --rule: #a8895a; --sheet: #f3ead6; color: #1d1a16; }
-[data-style='police-mix-nuit'] .drawer { --ink: #eef2f8; }
+:root[data-style='nuit'] { --ink: #eef2f8; --faded: #b8c2d4; --rule: #2c3a4f; --cream: #101a2a; --sheet: #182235; }
+[data-style='nuit'] .paper::before { opacity: 0; }
+[data-style='nuit'] .masthead { background-color: #0b1320; }
+[data-style='nuit'] .masthead h1 { color: #fff; text-shadow: 0 0 12px rgba(47,139,255,.6); }
+[data-style='nuit'] .dateline { color: var(--tape); }
+[data-style='nuit'] .masthead::before { height: 5px; opacity: 1; }
+[data-style='nuit'] .chip { background: rgba(16,26,42,.88); color: #eef2f8; border-color: #2c3a4f; backdrop-filter: blur(6px); }
+[data-style='nuit'] .chip:not(.off):not(.reset) { border-color: var(--chip); box-shadow: 0 0 8px color-mix(in srgb, var(--chip) 45%, transparent); }
+[data-style='nuit'] .era-bar .chip.on { background: var(--tape); color: #111; border-color: var(--tape); }
+[data-style='nuit'] .icon-btn, [data-style='nuit'] .round-btn { background: #182235; color: #fff; border-color: #2c3a4f; }
+[data-style='nuit'] .chronicle { background-color: #c9ae7c; --ink: #1d1a16; --faded: #4f4434; color: #1d1a16; box-shadow: 0 -2px 0 var(--gyro-blue), 0 -10px 30px rgba(47,139,255,.3); }
+[data-style='nuit'] .chronicle.paper::before { opacity: .5; }
+[data-style='nuit'] .chronicle::after { background: #c9ae7c; color: #1d1a16; }
+[data-style='nuit'] .sheet-inner { background-color: #f6eedc; --ink: #1d1a16; --faded: #5f523f; --rule: #a8895a; --sheet: #f3ead6; color: #1d1a16; }
+[data-style='nuit'] .drawer { --ink: #eef2f8; }

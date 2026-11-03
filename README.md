@@ -6,7 +6,8 @@ C'est la version web de l'app iOS Fediv. Elle tourne entièrement dans le naviga
 
 ## Fonctions
 
-- **Carte** au plan IGN, façon gravure ou en couleurs, avec regroupement des épingles.
+- **Style « Dossier de police »** : chemise kraft, fiches punaisées, gyrophare et rubalise « Scène de crime » ; version jour (kraft) et version nuit.
+- **Carte** au plan IGN, avec regroupement des épingles.
 - **Rubriques** : Histoire (affichée seule au lancement : les 580 grands faits historiques sourcés par Wikipédia, tous types confondus), crimes et vols, attentats, accidents, incendies, explosions, catastrophes naturelles, pollutions.
 - **Époques** : Belle Époque, guerres, seconde moitié du XXe siècle, aujourd'hui.
 - **La chronique** : les récits visibles sur la carte, du plus proche au plus lointain.
@@ -18,7 +19,7 @@ C'est la version web de l'app iOS Fediv. Elle tourne entièrement dans le naviga
 - **Qui a fait le coup ?** : dix affaires anciennes à résoudre.
 - **Le baromètre** : délinquance enregistrée dans la commune, comparée au département.
 - **Mode promenade** : une alerte « Extra ! Extra ! » en passant près d'un lieu.
-- **Réglages** : apparence claire ou sombre, papier plus ou moins jauni, sons, taille du texte.
+- **Réglages** : apparence jour ou nuit, sons, taille du texte.
 
 ## Sources
 
