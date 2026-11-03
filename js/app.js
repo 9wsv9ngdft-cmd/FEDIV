@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=2';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js';
-import { settings, carnet, playSound } from './store.js';
+} from './sources.js?v=2';
+import { settings, carnet, playSound } from './store.js?v=2';
 
 // ───────────────────────── Outils ─────────────────────────
 
