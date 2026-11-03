@@ -151,7 +151,57 @@ function bell(t, gain = 0.09) {
   tone(t, { freq: 4186, duration: 0.25, gain: gain * 0.25, attack: 0.002 });
 }
 
+/** Souffle d'air qui passe : bruit filtré dont la fréquence monte puis redescend. */
+function swoosh(t, { duration = 0.42, from = 320, peak = 1700, to = 480, gain = 0.1 } = {}) {
+  const f = noise(t, { duration, freq: from, q: 0.9, gain, attack: duration * 0.38, curve: 0.5 });
+  f.frequency.setValueAtTime(from, t);
+  f.frequency.exponentialRampToValueAtTime(peak, t + duration * 0.45);
+  f.frequency.exponentialRampToValueAtTime(to, t + duration);
+  // Un peu de « corps » grave pour que le souffle ne siffle pas.
+  noise(t, { duration: duration * 0.9, type: 'lowpass', freq: 260, gain: gain * 0.6, attack: duration * 0.35, curve: 0.7 });
+}
+
+/** Sirène lointaine, très feutrée (deux tons qui alternent). */
+function siren(t, duration, gain = 0.03) {
+  const a = ctx;
+  const o = a.createOscillator();
+  o.type = 'triangle';
+  const step = 0.42;
+  for (let i = 0, at = t; at < t + duration; i++, at += step) o.frequency.setValueAtTime(i % 2 ? 588 : 784, at);
+  const lp = a.createBiquadFilter();
+  lp.type = 'lowpass';
+  lp.frequency.value = 1100;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + 0.5);
+  g.gain.setValueAtTime(gain, t + duration - 0.6);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  o.connect(lp).connect(g).connect(master);
+  o.start(t);
+  o.stop(t + duration + 0.05);
+}
+
 const SOUNDS = {
+  // Ouverture : sirène au loin, la rubalise qui file, l'épingle plantée, FEDIV tapé à la machine, la sonnette.
+  intro(t) {
+    noise(t, { duration: 1.6, type: 'lowpass', freq: 180, gain: 0.14, attack: 0.7, curve: 0.8 });
+    siren(t + 0.05, 1.7, 0.028);
+    swoosh(t + 0.22, { duration: 0.5, gain: 0.11 });
+    swoosh(t + 0.38, { duration: 0.5, from: 380, peak: 2000, to: 520, gain: 0.09 });
+    tone(t + 0.8, { freq: 130, to: 60, duration: 0.18, gain: 0.26, attack: 0.002 });
+    noise(t + 0.8, { duration: 0.05, type: 'lowpass', freq: 1100, gain: 0.12, curve: 4 });
+    [1.05, 1.15, 1.25, 1.35, 1.45].forEach((d, i) => key(t + d, i === 4 ? 1 : 0.8));
+    bell(t + 1.85, 0.06);
+  },
+  // Le rideau se lève : la rubalise repart, un souffle et un léger choc.
+  outro(t) {
+    swoosh(t, { duration: 0.55, from: 500, peak: 1900, to: 300, gain: 0.1 });
+    tone(t + 0.18, { freq: 110, to: 55, duration: 0.2, gain: 0.12, attack: 0.01 });
+  },
+  // Un souffle discret (menu, recherche, survol de la carte).
+  woosh(t) { swoosh(t); },
+  // Un souffle plus court, qui s'éloigne.
+  wooshOut(t) { swoosh(t, { duration: 0.3, from: 1400, peak: 1600, to: 380, gain: 0.07 }); },
   // Une touche frappée.
   key(t) { key(t); },
   // Quelques mots tapés à la machine.
@@ -196,7 +246,18 @@ const SOUNDS = {
 export const SOUND_NAMES = {
   key: 'Touche', type: 'Frappe', carriage: 'Retour chariot', ding: 'Sonnette',
   paper: 'Feuille', drawer: 'Classeur', stamp: 'Tampon', strike: 'On barre',
+  woosh: 'Woosh', intro: 'Ouverture',
 };
+
+/** Le navigateur laisse-t-il jouer du son sans toucher l'écran ? (souvent non sur iPhone) */
+export async function soundAllowed() {
+  if (!settings.sound) return false;
+  try {
+    const a = audio();
+    if (a.state !== 'running') await Promise.race([a.resume(), new Promise(r => setTimeout(r, 120))]);
+    return a.state === 'running';
+  } catch { return false; }
+}
 
 export function playSound(kind, force = false) {
   if (!settings.sound && !force) return;

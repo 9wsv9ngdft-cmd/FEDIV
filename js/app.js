@@ -5,11 +5,11 @@ import {
   loadLocal, loadHistory, loadOverseas, territoryAt, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
 } from './sources.js?v=26';
-import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
+import { settings, carnet, board, playSound, soundAllowed, SOUND_NAMES } from './store.js?v=26';
 import { initModes, lightRefresh, openCompass, openStakeout, setShake, keepAwake } from './modes.js?v=33';
-import { initAR, openAR } from './ar.js?v=4';
+import { initAR, openAR } from './ar.js?v=5';
 
-const APP_VERSION = 'version 1.15';
+const APP_VERSION = 'version 1.16';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -1071,7 +1071,7 @@ $('#randomBtn').addEventListener('click', () => {
   if (!pool.length) return;
   const f = pool[Math.floor(Math.random() * pool.length)];
   ensureVisible(f);
-  playSound('carriage');
+  playSound('woosh');
   let shown = false;
   const show = () => { if (!shown) { shown = true; showTeaser(f); } };
   map.flyTo({ center: [f.lon, f.lat], zoom: 14.5, speed: 1.6 });
@@ -1148,7 +1148,7 @@ $('#replayStop').addEventListener('click', () => stopReplay(false));
 
 // ───────────────────────── Sommaire ─────────────────────────
 
-function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('drawer'); }
+function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('woosh'); }
 function closeMenu() { $('#menu').hidden = true; $('#menuScrim').hidden = true; }
 $('#menuBtn').addEventListener('click', openMenu);
 $('#menuScrim').addEventListener('click', closeMenu);
@@ -1170,6 +1170,7 @@ let searchSeq = 0;
 
 function openSearch() {
   searchPanel.hidden = false;
+  playSound('woosh');
   searchInput.value = '';
   searchResults.innerHTML = '<li class="hint">Tape le nom d’une ville, d’une rue ou d’une affaire (« Bonnot », « Joconde », « Lyon »…).</li>';
   setTimeout(() => searchInput.focus(), 50);
@@ -1363,13 +1364,27 @@ const splashMin = splashQuick ? 450 : 2900;
 const splashStart = 0;
 let splashReady = false;
 
+let splashSound = false;
 function hideSplash(force = false) {
   const el = $('#splash');
   if (!el || el.classList.contains('gone')) return;
   const wait = splashMin - (performance.now() - splashStart);
   if (!force && wait > 0) { setTimeout(() => hideSplash(), wait); return; }
   el.classList.add('gone');
+  if (splashSound) playSound('outro');
   setTimeout(() => el.remove(), 1100);
+}
+// Son d'ouverture, calé sur l'animation. Sur iPhone, le son n'est permis qu'après un toucher :
+// dans ce cas, toucher l'écran pendant l'ouverture joue la sortie (souffle de la rubalise).
+if (splashEl && !splashQuick) {
+  const startIntro = async () => {
+    if (!(await soundAllowed())) return;
+    splashSound = true;
+    if (!splashEl.classList.contains('gone')) playSound('intro');
+  };
+  if (splashEl.classList.contains('go')) startIntro();
+  else new MutationObserver((_, obs) => { if (splashEl.classList.contains('go')) { obs.disconnect(); startIntro(); } }).observe(splashEl, { attributes: true });
+  splashEl.addEventListener('pointerdown', () => { splashSound = true; }, { once: true });
 }
 splashEl?.addEventListener('click', () => hideSplash(true)); // un toucher pour passer
 setTimeout(() => hideSplash(true), 7000); // au pire, on n'attend pas plus
@@ -1399,7 +1414,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // Toucher le titre ramène à la vue de toute la France.
-$('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 46.6], zoom: window.innerWidth < 600 ? 4.6 : 5.4 }));
+$('.masthead-title').addEventListener('click', () => (playSound('woosh'), map.flyTo({ center: [2.45, 46.6], zoom: window.innerWidth < 600 ? 4.6 : 5.4 })));
 
 initModes({
   map, state, mapReady: () => mapReady, toast, playSound, openSheet, closeSheet, topBar,

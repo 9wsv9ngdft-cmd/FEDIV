@@ -322,7 +322,7 @@ export async function openAR() {
     rebuild();
   };
   el.querySelectorAll('[data-range]').forEach(b => b.onclick = () => { ctx.playSound('key'); setRange(Number(b.dataset.range)); });
-  el.querySelector('.ar-close').onclick = () => { ctx.playSound('drawer'); closeAR(); };
+  el.querySelector('.ar-close').onclick = () => { ctx.playSound('wooshOut'); closeAR(); };
   el.querySelector('.ar-marks').addEventListener('click', e => {
     const t = e.target.closest('.ar-mark');
     const it = t && ar.items.find(x => x.f.id === t.dataset.id);
@@ -357,7 +357,7 @@ export async function openAR() {
   ar.clock = setInterval(tickClock, 1000);
   tickClock();
   ctx.keepAwake?.(true);
-  ctx.playSound('carriage');
+  ctx.playSound('woosh');
   startCamera();
   rebuild();
   ar.raf = requestAnimationFrame(frame);
