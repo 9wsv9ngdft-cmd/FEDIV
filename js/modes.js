@@ -229,19 +229,35 @@ function stopStakeout() {
   keepAwake(false);
 }
 
-function stakeoutShow() {
+/** Le meilleur texte disponible pour un récit : résumé ARIA, extrait Wikipédia, ou résumé court. */
+async function bestText(f) {
+  if (f.ariaNumber) await ctx.loadAriaDetail(f);
+  const generic = !f.summary || f.summary.startsWith('Ouvre la fiche');
+  const crime = f.rubric === 'crime' && (f.id.startsWith('wd-') || f.id.startsWith('wdl-'));
+  if (generic && !crime && f.sourceURL.includes('wikipedia.org/wiki/')) {
+    const page = await ctx.fetchWikipediaSummary(f.sourceURL);
+    if (page.extract) return page.extract.split(/(?<=\.)\s/).slice(0, 3).join(' ');
+  }
+  return generic ? f.place : f.summary;
+}
+
+async function stakeoutShow() {
   const s = stakeout;
   if (!s) return;
   const box = document.getElementById('stakeoutBox');
   if (!box) return;
   const f = s.list[s.index];
+  const token = (s.token = (s.token || 0) + 1);
   const d = ctx.distance(s.at.lat, s.at.lon, f.lat, f.lon);
   box.querySelector('.stake-count').textContent = `Affaire ${s.index + 1} sur ${s.list.length}`;
   box.querySelector('.stake-meta').textContent = `${f.category} · ${f.date} · à ${ctx.distanceLabel(d)}, vers le ${cardinal(bearing(s.at, f))}`;
   box.querySelector('.stake-title').textContent = f.title;
-  box.querySelector('.stake-text').textContent = f.summary || f.place;
+  box.querySelector('.stake-text').textContent = '…';
   box.querySelector('[data-pause]').textContent = s.paused ? '▶ Reprendre' : '⏸ Pause';
   ctx.map.easeTo({ center: [f.lon, f.lat], zoom: Math.max(ctx.map.getZoom(), 16), duration: 900 });
+  const text = await bestText(f);
+  if (stakeout !== s || s.token !== token) return; // on a changé d'affaire entre-temps
+  box.querySelector('.stake-text').textContent = text;
   if (s.paused) return;
   const next = () => {
     if (!stakeout || stakeout !== s || s.paused) return;
@@ -249,7 +265,7 @@ function stakeoutShow() {
   };
   try {
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(`À ${Math.round(d / 10) * 10} mètres. ${f.date}. ${f.title}. ${f.summary || ''}`);
+    const u = new SpeechSynthesisUtterance(`À ${Math.round(d / 10) * 10} mètres. ${f.date}. ${f.title}. ${text}`);
     u.lang = 'fr-FR';
     const voices = speechSynthesis.getVoices().filter(v => v.lang?.startsWith('fr'));
     u.voice = voices.find(v => /Thomas|Daniel|Henri|Paul/i.test(v.name)) ?? voices[0] ?? null;
@@ -268,7 +284,8 @@ export function openStakeout() {
     for (const f of ctx.state.facts.values()) {
       if (Math.abs(f.lat - at.lat) > 0.006 || Math.abs(f.lon - at.lon) > 0.009) continue;
       const d = ctx.distance(at.lat, at.lon, f.lat, f.lon);
-      if (d <= 500) list.push([f, d]);
+      // Les grandes affaires d'abord, puis le reste par distance.
+      if (d <= 500) list.push([f, d + (f.curated ? 0 : 200) + (f.approx ? 300 : 0)]);
     }
     list.sort((a, b) => a[1] - b[1]);
     if (!list.length) {

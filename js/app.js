@@ -6,7 +6,7 @@ import {
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
 } from './sources.js?v=25';
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
-import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=26';
+import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=27';
 
 const APP_VERSION = 'version 1.8';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
@@ -1387,7 +1387,7 @@ $('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 
 
 initModes({
   map, state, mapReady: () => mapReady, toast, playSound, openSheet, closeSheet, topBar,
-  distance, distanceLabel, isVisible, ensureVisible, openArticle, setMe,
+  distance, distanceLabel, isVisible, ensureVisible, openArticle, setMe, loadAriaDetail, fetchWikipediaSummary,
 });
 // « Secouer » : sur iPhone, l'autorisation doit suivre un geste ; on la redemande au premier toucher.
 if (settings.shake) {
