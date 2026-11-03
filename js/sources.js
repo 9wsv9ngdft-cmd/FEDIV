@@ -2,7 +2,7 @@
 // (Wikidata, Géorisques, Wikipédia). Aucune position personnelle n'est envoyée : Wikidata est interrogé
 // pour toute la France, Géorisques autour du centre de la carte arrondi à ~1 km.
 
-import { family } from './rubrics.js?v=5';
+import { family } from './rubrics.js?v=8';
 
 const FRANCE = { minLat: 41.2, maxLat: 51.2, minLon: -5.3, maxLon: 9.7 };
 const inFrance = (lat, lon) => lat > FRANCE.minLat && lat < FRANCE.maxLat && lon > FRANCE.minLon && lon < FRANCE.maxLon;

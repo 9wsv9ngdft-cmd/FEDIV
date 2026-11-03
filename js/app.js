@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=5';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=8';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=5';
-import { settings, carnet, playSound } from './store.js?v=5';
+} from './sources.js?v=8';
+import { settings, carnet, playSound } from './store.js?v=8';
 
 // ───────────────────────── Outils ─────────────────────────
 
@@ -81,6 +81,10 @@ const STYLES = {
                       cluster: ['#fbfaf5', '#c0392b', '#1d1a16'] },
   'police-gyro':    { dark: true, map: { bg: '#020a18', saturation: -1, opacity: 0.42, brightness: 0.85, contrast: 0.3 },
                       cluster: ['#2f8bff', '#ff2e3c', '#ffffff'] },
+  'police-mix-jour': { dark: false, map: { bg: '#c9b48a', saturation: -0.9, opacity: 0.7, brightness: 1, contrast: 0.12 },
+                       cluster: ['#14181f', '#f5c518', '#f5c518'] },
+  'police-mix-nuit': { dark: true, map: { bg: '#071427', saturation: -1, opacity: 0.45, brightness: 0.85, contrast: 0.25 },
+                       cluster: ['#f5c518', '#14181f', '#14181f'] },
   noir:    { dark: true, map: { bg: '#000000', saturation: -1, opacity: 1, brightness: 0.38, contrast: 0.35 },
              cluster: ['#e3262f', '#000000', '#ffffff'] },
 };
@@ -154,7 +158,7 @@ function styleMap() {
     map.setPaintProperty('ign', 'raster-opacity', m.opacity);
     map.setPaintProperty('ign', 'raster-brightness-max', m.brightness);
     map.setPaintProperty('ign', 'raster-contrast', m.contrast);
-    map.setPaintProperty('points', 'circle-stroke-color', trialStyle === 'police-gyro' ? '#ffffff' : trial.dark ? '#000000' : '#ffffff');
+    map.setPaintProperty('points', 'circle-stroke-color', ['police-gyro', 'police-mix-nuit'].includes(trialStyle) ? '#ffffff' : trial.dark ? '#000000' : '#ffffff');
     if (trialStyle === 'police-gyro') map.setPaintProperty('points', 'circle-stroke-width', 1.5);
     map.setPaintProperty('clusters', 'circle-color', trial.cluster[0]);
     map.setPaintProperty('clusters', 'circle-stroke-color', trial.cluster[1]);
