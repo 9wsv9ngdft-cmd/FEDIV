@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fediv — les faits divers autour de vous</title>
+  <meta name="description" content="Fediv : une carte des faits divers, crimes, accidents et grandes affaires de France, racontés comme dans un vieux journal.">
+  <meta name="theme-color" content="#1b2433">
+  <link rel="icon" type="image/png" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Special+Elite&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div id="map" aria-label="Carte des faits divers"></div>
+
+  <!-- En-tête -->
+  <header class="masthead paper">
+    <button class="icon-btn" id="menuBtn" aria-label="Sommaire">☰</button>
+    <div class="masthead-title">
+      <h1>Fediv</h1>
+      <p class="dateline" id="todayLine"></p>
+    </div>
+    <button class="icon-btn" id="settingsBtn" aria-label="Réglages">⚙</button>
+  </header>
+
+  <!-- Filtres -->
+  <nav class="filters">
+    <div class="rubric-bar" id="rubricBar" role="group" aria-label="Rubriques"></div>
+    <div class="era-bar" id="eraBar" role="group" aria-label="Époques"></div>
+  </nav>
+
+  <div class="extra-banner" id="extraBanner" hidden></div>
+
+  <!-- Commandes de carte -->
+  <div class="map-controls">
+    <button class="round-btn" id="locateBtn" aria-label="Me localiser" title="Me localiser">◎</button>
+  </div>
+
+  <!-- Bannière de circuit -->
+  <div class="circuit-banner paper" id="circuitBanner" hidden></div>
+
+  <!-- Aperçu d'un récit -->
+  <article class="teaser paper" id="teaser" hidden></article>
+
+  <!-- Chronique (panneau) -->
+  <aside class="chronicle paper torn" id="chronicle">
+    <button class="chronicle-handle" id="chronicleToggle" aria-label="Replier ou déplier la chronique"><span></span></button>
+    <div class="chronicle-head">
+      <div>
+        <p class="kicker">La chronique</p>
+        <h2 id="chronicleTitle">Autour de la carte</h2>
+      </div>
+      <p class="status" id="statusLine"></p>
+    </div>
+    <ol class="clippings" id="clippings"></ol>
+  </aside>
+
+  <!-- Sommaire -->
+  <div class="drawer-scrim" id="menuScrim" hidden></div>
+  <nav class="drawer paper" id="menu" hidden aria-label="Sommaire">
+    <h2 class="drawer-title">Sommaire</h2>
+    <button data-open="une"><span>📰</span><b>La Une du jour</b><small>Ce qui s'est passé un jour comme aujourd'hui</small></button>
+    <button data-open="circuits"><span>🗺</span><b>Circuits</b><small>Balades thématiques autour du centre de la carte</small></button>
+    <button data-open="carnet"><span>📒</span><b>Carnet d'enquêteur</b><small>Tes tampons et tes insignes</small></button>
+    <button data-open="quiz"><span>🕵</span><b>Qui a fait le coup ?</b><small>Dix affaires anciennes à résoudre</small></button>
+    <button data-open="barometer"><span>📊</span><b>Le baromètre</b><small>Délinquance enregistrée dans la commune</small></button>
+    <button data-open="walk"><span>🚶</span><b id="walkLabel">Mode promenade</b><small>Être prévenu en passant près d'un lieu</small></button>
+    <button data-open="about"><span>ℹ</span><b>À propos et sources</b><small>D'où viennent les récits</small></button>
+  </nav>
+
+  <!-- Fenêtres plein écran -->
+  <section class="sheet" id="sheet" hidden role="dialog" aria-modal="true">
+    <div class="sheet-inner paper" id="sheetInner"></div>
+  </section>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
