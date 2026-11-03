@@ -212,7 +212,14 @@ export async function openCompass() {
     compass.pos = { lat: p.coords.latitude, lon: p.coords.longitude };
     ctx.setMe(p);
     renderCompass();
-  }, () => ctx.toast('Position refusée ou introuvable.'), { enableHighAccuracy: true, maximumAge: 3000 });
+  }, () => {
+    if (!compass || compass.pos) return;
+    // Sans position : on part du centre de la carte, la flèche reste utile pour s'orienter.
+    const c = ctx.map.getCenter();
+    compass.pos = { lat: c.lat, lon: c.lng };
+    ctx.toast('Position indisponible : la boussole part du centre de la carte.');
+    renderCompass();
+  }, { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 });
   keepAwake(true);
   renderCompass();
 }
