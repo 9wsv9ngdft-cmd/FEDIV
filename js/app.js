@@ -178,6 +178,7 @@ map.on('load', () => {
 
   mapReady = true;
   styleMap();
+  if (state.heat) setHeat(true);
   refresh();
 
   map.on('click', 'clusters', e => {
