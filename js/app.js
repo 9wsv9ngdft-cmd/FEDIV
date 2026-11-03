@@ -549,7 +549,8 @@ function openBoard() {
 
 function showBoardOnMap(fit = false) {
   const pins = board.pins;
-  if (!mapReady || !pins.length) { hideBoardOnMap(); return; }
+  if (!pins.length) { hideBoardOnMap(); return; }
+  if (!mapReady) { map.once('load', () => showBoardOnMap(fit)); return; }
   state.boardShown = true;
   if (!map.getSource('board')) {
     map.addSource('board', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
