@@ -355,8 +355,9 @@ const sheet = $('#sheet');
 const sheetInner = $('#sheetInner');
 let sheetOnClose = null;
 
-function openSheet(html, onClose) {
+function openSheet(html, onClose, view = '') {
   sheetInner.innerHTML = html;
+  sheetInner.dataset.view = view;
   sheet.hidden = false;
   sheet.scrollTop = 0;
   sheetOnClose = onClose ?? null;
@@ -411,7 +412,7 @@ async function openArticle(f) {
       <button class="btn" data-share>↗ Partager</button>
     </div>
     ${onSite ? '<div class="stamp">Vu sur place</div>' : isNew ? '<div class="stamp">Classé au carnet</div>' : ''}
-  `);
+  `, null, 'article');
   if (isNew) { playSound('bell'); toast(onSite ? 'Tampon « sur place » ajouté au carnet !' : 'Récit tamponné dans ton carnet'); }
   sheetInner.querySelector('[data-time]').onclick = () => openTimeMachine(f);
   sheetInner.querySelector('[data-share]').onclick = () => shareFact(f);
