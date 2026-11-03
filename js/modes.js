@@ -1,4 +1,4 @@
-// Modes « hors du commun » : lampe torche et Luminol, boussole de l'enquêteur, planque, secouer.
+// Modes « hors du commun » : lampe torche (avec traces façon Luminol), boussole de l'enquêteur, planque, secouer.
 // Ils reçoivent de app.js le contexte dont ils ont besoin (carte, état, fenêtres, sons…).
 
 let ctx = null;
@@ -60,13 +60,13 @@ function ensureLuminolLayers() {
       'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 14, 2],
       'heatmap-weight': 0.5,
       'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
-        0, 'rgba(0,0,0,0)', 0.15, 'rgba(40,140,255,.35)', 0.45, 'rgba(70,210,255,.65)', 0.8, 'rgba(160,250,255,.85)', 1, 'rgba(235,255,255,.95)'],
+        0, 'rgba(0,0,0,0)', 0.15, 'rgba(40,140,255,.22)', 0.45, 'rgba(70,210,255,.42)', 0.8, 'rgba(160,250,255,.6)', 1, 'rgba(235,255,255,.75)'],
     },
-  });
+  }, 'clusters');
   map.addLayer({
     id: 'luminol-spots', type: 'circle', source: 'luminol', minzoom: 11, layout: { visibility: 'none' },
-    paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 17, 16], 'circle-color': '#7fe8ff', 'circle-blur': 0.9, 'circle-opacity': 0.85 },
-  });
+    paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 5, 17, 16], 'circle-color': '#7fe8ff', 'circle-blur': 0.9, 'circle-opacity': 0.6 },
+  }, 'clusters');
 }
 
 export function setLight(mode) {
@@ -76,31 +76,25 @@ export function setLight(mode) {
   el.dataset.mode = mode;
   el.hidden = mode === 'off';
   btn.classList.toggle('active', mode !== 'off');
-  btn.textContent = mode === 'uv' ? '🧪' : '🔦';
-  btn.setAttribute('aria-label', mode === 'off' ? 'Lampe torche' : mode === 'torch' ? 'Passer en lumière UV (Luminol)' : 'Éteindre la lampe');
+  btn.setAttribute('aria-label', mode === 'off' ? 'Allumer la lampe torche' : 'Éteindre la lampe torche');
   const { map } = ctx;
+  // Sous le faisceau, de légères traces bleues révèlent les lieux de crimes (façon Luminol).
   if (ctx.mapReady()) {
-    if (mode === 'uv') ensureLuminolLayers();
-    for (const id of ['luminol-glow', 'luminol-spots']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode === 'uv' ? 'visible' : 'none');
-    // En lumière UV, seules les traces comptent : on range les épingles habituelles.
-    const heat = ctx.state.heat;
-    for (const id of ['clusters', 'cluster-count']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode === 'uv' || heat ? 'none' : 'visible');
-    if (map.getLayer('points')) map.setLayoutProperty('points', 'visibility', mode === 'uv' ? 'none' : 'visible');
-    if (map.getLayer('heat')) map.setLayoutProperty('heat', 'visibility', heat && mode !== 'uv' ? 'visible' : 'none');
+    if (mode !== 'off') ensureLuminolLayers();
+    for (const id of ['luminol-glow', 'luminol-spots']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode !== 'off' ? 'visible' : 'none');
   }
-  if (mode === 'torch') ctx.toast('Lampe torche : promène ton doigt sur la carte');
-  if (mode === 'uv') ctx.toast('Luminol : la lumière UV révèle les crimes en bleu');
+  if (mode !== 'off') ctx.toast('Lampe torche : promène ton doigt, les traces de crimes brillent sous le faisceau');
   ctx.playSound(mode === 'off' ? 'key' : 'stamp');
 }
 
 /** Appelé quand de nouveaux récits arrivent : les taches de Luminol suivent. */
 export function lightRefresh() {
-  if (lightMode === 'uv' && ctx.mapReady()) ctx.map.getSource('luminol')?.setData(crimeFeatures());
+  if (lightMode !== 'off' && ctx.mapReady()) ctx.map.getSource('luminol')?.setData(crimeFeatures());
 }
 
 function initLight() {
   const btn = document.getElementById('torchBtn');
-  btn.addEventListener('click', () => setLight(lightMode === 'off' ? 'torch' : lightMode === 'torch' ? 'uv' : 'off'));
+  btn.addEventListener('click', () => setLight(lightMode === 'off' ? 'torch' : 'off'));
   const track = e => { if (lightMode !== 'off') placeLight(e.clientX, e.clientY); };
   window.addEventListener('pointerdown', track, { passive: true });
   window.addEventListener('pointermove', track, { passive: true });

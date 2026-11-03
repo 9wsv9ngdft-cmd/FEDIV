@@ -6,9 +6,9 @@ import {
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
 } from './sources.js?v=25';
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
-import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=29';
+import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=30';
 
-const APP_VERSION = 'version 1.8';
+const APP_VERSION = 'version 1.9';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
