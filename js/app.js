@@ -7,7 +7,7 @@ import {
 } from './sources.js?v=13';
 import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=17';
 
-const APP_VERSION = 'version 1.5';
+const APP_VERSION = 'version 1.6';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -49,6 +49,8 @@ const state = {
   circuit: null,
   catnatCells: new Set(),
   selected: null,
+  playYear: null,
+  heat: false,
 };
 
 function addFacts(list) {
@@ -67,6 +69,7 @@ function addFacts(list) {
 /** « Histoire » montre les grands faits historiques sourcés (Wikipédia), quel que soit leur type ;
  *  les autres rubriques ajoutent tous les récits de leur type (Wikidata, ARIA, Géorisques). */
 const isVisible = f => eraContains(state.era, f.year)
+  && (state.playYear == null || (f.year > 0 && f.year <= state.playYear))
   && (!state.hidden.has(f.rubric) || (f.curated && !state.hidden.has('history')));
 const visibleFacts = () => [...state.facts.values()].filter(isVisible);
 
@@ -202,6 +205,10 @@ function refresh() {
   refreshQueued = true;
   requestAnimationFrame(() => {
     refreshQueued = false;
+    const heat = state.heat && map.getSource?.('heat');
+    if (heat) {
+      heat.setData({ type: 'FeatureCollection', features: visibleFacts().map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) });
+    }
     const source = map.getSource?.('facts');
     if (source) {
       source.setData({
@@ -413,10 +420,16 @@ async function openArticle(f) {
       <a class="btn primary" href="${esc(f.sourceURL)}" target="_blank" rel="noopener">📖 Lire la source</a>
       <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lon}" target="_blank" rel="noopener">🧭 Y aller</a>
       <button class="btn" data-time>🕰 Remonter le temps</button>
-      <button class="btn" data-share>↗ Partager</button>
+      <button class="btn" data-share>↗ Partager le lien</button>
+      <button class="btn" data-card>🗂 Partager la fiche</button>
     </div>
     ${onSite ? '<div class="stamp">Vu sur place</div>' : isNew ? '<div class="stamp">Classé au carnet</div>' : ''}
+    ${nearbyHTML(f)}
   `, null, 'article');
+  sheetInner.querySelectorAll('[data-near]').forEach(el => {
+    el.onclick = () => { const g = state.facts.get(el.dataset.near); if (g) { ensureVisible(g); map.jumpTo({ center: [g.lon, g.lat], zoom: Math.max(map.getZoom(), 15) }); openArticle(g); } };
+  });
+  sheetInner.querySelector('[data-card]').onclick = () => shareCard(f);
   if (isNew) { playSound('stamp'); toast(onSite ? 'Tampon « sur place » ajouté au carnet !' : 'Récit tamponné dans ton carnet'); }
   sheetInner.querySelector('[data-time]').onclick = () => openTimeMachine(f);
   sheetInner.querySelector('[data-share]').onclick = () => shareFact(f);
@@ -436,6 +449,24 @@ async function openArticle(f) {
   }
 }
 
+/** Les récits les plus proches (moins de 2 km), pour prolonger la lecture. */
+function nearbyHTML(f) {
+  const near = [];
+  for (const g of state.facts.values()) {
+    if (g.id === f.id || Math.abs(g.lat - f.lat) > 0.02 || Math.abs(g.lon - f.lon) > 0.03) continue;
+    const d = distance(f.lat, f.lon, g.lat, g.lon);
+    if (d < 2000) near.push([g, d + (g.curated ? 0 : 300) + (g.approx ? 500 : 0)]);
+  }
+  near.sort((a, b) => a[1] - b[1]);
+  const seen = new Set();
+  const list = near.map(x => x[0]).filter(g => !seen.has(g.title) && seen.add(g.title)).slice(0, 4);
+  if (!list.length) return '';
+  return `<h3 class="section-title">Dans le même quartier</h3>
+    <div class="near-list">${list.map(g => `<button class="near" data-near="${esc(g.id)}" style="--tint:${RUBRIC_BY_ID[g.rubric].color}">
+      <small>${RUBRIC_BY_ID[g.rubric].icon} ${esc(g.category)} · ${esc(g.date)} · ${distanceLabel(distance(f.lat, f.lon, g.lat, g.lon))}</small>
+      <b>${esc(g.title)}</b></button>`).join('')}</div>`;
+}
+
 async function shareFact(f) {
   const url = `${location.origin}${location.pathname}#fait=${encodeURIComponent(f.id)}`;
   const data = { title: `Fediv — ${f.title}`, text: `${f.title} (${f.date}), ${f.place}`, url };
@@ -443,6 +474,88 @@ async function shareFact(f) {
     if (navigator.share) await navigator.share(data);
     else { await navigator.clipboard.writeText(url); toast('Lien copié !'); }
   } catch { /* partage annulé */ }
+}
+
+// ───────────────────────── Fiche à partager (image) ─────────────────────────
+
+function wrapText(ctx, text, maxWidth) {
+  const words = String(text).split(/\s+/);
+  const lines = [];
+  let line = '';
+  for (const w of words) {
+    const test = line ? `${line} ${w}` : w;
+    if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; } else line = test;
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+/** Dessine une fiche de dossier 1080 × 1350 (format portrait des réseaux) et la partage. */
+async function shareCard(f) {
+  if (f.ariaNumber) await loadAriaDetail(f);
+  await document.fonts?.ready;
+  const W = 1080, H = 1350;
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  // Chemise kraft avec grain
+  x.fillStyle = '#d6bf93'; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 9000; i++) { x.fillStyle = `rgba(${Math.random() < .5 ? '90,60,20' : '255,240,210'},${Math.random() * .08})`; x.fillRect(Math.random() * W, Math.random() * H, 2, 2); }
+  // Onglet
+  x.fillStyle = '#c9ae7c'; x.beginPath(); x.roundRect(70, 60, 360, 70, [18, 18, 0, 0]); x.fill();
+  x.fillStyle = '#1d1a16'; x.font = '700 30px Oswald, sans-serif'; x.fillText('DOSSIER · FEDIV', 100, 108);
+  // Fiche punaisée
+  x.save(); x.translate(W / 2, 700); x.rotate(-0.012);
+  x.shadowColor = 'rgba(60,40,10,.35)'; x.shadowBlur = 30; x.shadowOffsetY = 12;
+  x.fillStyle = '#fffdf6'; x.fillRect(-440, -540, 880, 1040);
+  x.shadowColor = 'transparent';
+  x.strokeStyle = 'rgba(80,120,190,.18)'; x.lineWidth = 2;
+  for (let y = -420; y < 480; y += 44) { x.beginPath(); x.moveTo(-440, y); x.lineTo(440, y); x.stroke(); }
+  x.fillStyle = '#c0271d'; x.fillRect(-440, -540, 880, 8);
+  const pin = x.createRadialGradient(-6, -546, 2, 0, -540, 22);
+  pin.addColorStop(0, '#ff8a80'); pin.addColorStop(.6, '#ff2e3c'); pin.addColorStop(1, '#5a0d08');
+  x.fillStyle = pin; x.beginPath(); x.arc(0, -540, 20, 0, Math.PI * 2); x.fill();
+  // Texte
+  x.fillStyle = '#c0271d'; x.font = '30px "Special Elite", monospace';
+  x.fillText(`${f.category} · ${f.date}`.toUpperCase().slice(0, 52), -390, -440);
+  x.fillStyle = '#1d1a16'; x.font = '64px "Permanent Marker", cursive';
+  let y = -350;
+  for (const line of wrapText(x, f.title, 780).slice(0, 4)) { x.fillText(line, -390, y); y += 78; }
+  x.fillStyle = '#c0271d'; x.font = '28px "Special Elite", monospace';
+  y += 6;
+  for (const line of wrapText(x, f.place, 780).slice(0, 2)) { x.fillText(line, -390, y); y += 40; }
+  x.fillStyle = '#2a241c'; x.font = '30px "Special Elite", monospace';
+  y += 24;
+  for (const line of wrapText(x, f.summary || '', 780).slice(0, Math.max(3, Math.floor((420 - y) / 44)))) { x.fillText(line, -390, y); y += 44; }
+  // Tampon
+  x.save(); x.translate(230, 400); x.rotate(-0.2); x.globalAlpha = .55;
+  x.strokeStyle = '#c0271d'; x.lineWidth = 6; x.strokeRect(-170, -40, 340, 80);
+  x.fillStyle = '#c0271d'; x.font = '700 44px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('CONFIDENTIEL', 0, 16);
+  x.restore();
+  x.restore();
+  // Rubalise
+  x.save(); x.translate(W / 2, 1260); x.rotate(-0.05);
+  x.shadowColor = 'rgba(0,0,0,.35)'; x.shadowBlur = 14;
+  x.fillStyle = '#f5c518'; x.fillRect(-700, -34, 1400, 68);
+  x.shadowColor = 'transparent';
+  x.fillStyle = '#111'; x.font = '700 32px Oswald, sans-serif'; x.textAlign = 'center';
+  x.fillText('SCÈNE DE CRIME — NE PAS FRANCHIR — FEDIV — SCÈNE DE CRIME — NE PAS FRANCHIR', 0, 12);
+  x.restore();
+  const blob = await new Promise(r => c.toBlob(r, 'image/png'));
+  const file = new File([blob], 'fediv-fiche.png', { type: 'image/png' });
+  const url = `${location.origin}${location.pathname}#fait=${encodeURIComponent(f.id)}`;
+  try {
+    if (navigator.canShare?.({ files: [file] })) {
+      await navigator.share({ files: [file], title: `Fediv — ${f.title}`, text: url });
+      return;
+    }
+  } catch { return; /* partage annulé */ }
+  // Sinon : aperçu avec téléchargement
+  const img = URL.createObjectURL(blob);
+  openSheet(`${topBar('🗂 Fiche à partager')}
+    <img src="${img}" alt="Fiche du récit ${esc(f.title)}" style="width:100%;border:1px solid var(--rule);box-shadow:var(--shadow)">
+    <div class="actions"><a class="btn primary" href="${img}" download="fediv-fiche.png">⬇ Enregistrer l’image</a><button class="btn" data-back>← Revenir à l’article</button></div>`);
+  sheetInner.querySelector('[data-back]').onclick = () => openArticle(f);
 }
 
 // ───────────────────────── Remonter le temps (IGN) ─────────────────────────
@@ -814,6 +927,87 @@ function toggleWalk() {
   $('#walkLabel').textContent = 'Arrêter la promenade';
   toast('Mode promenade : garde la page ouverte, je te préviens près d’un lieu.');
 }
+
+// ───────────────────────── Une affaire au hasard ─────────────────────────
+
+$('#randomBtn').addEventListener('click', () => {
+  // Les grandes affaires sourcées par Wikipédia, de préférence à l'époque choisie.
+  let pool = [...state.facts.values()].filter(f => f.curated && f.sourceURL.includes('wikipedia') && eraContains(state.era, f.year));
+  if (!pool.length) pool = [...state.facts.values()].filter(f => f.curated);
+  if (!pool.length) return;
+  const f = pool[Math.floor(Math.random() * pool.length)];
+  ensureVisible(f);
+  playSound('carriage');
+  map.flyTo({ center: [f.lon, f.lat], zoom: 14.5, speed: 1.6 });
+  map.once('moveend', () => showTeaser(f));
+});
+
+// ───────────────────────── Carte de chaleur ─────────────────────────
+
+function setHeat(on) {
+  state.heat = on;
+  const b = $('#heatBtn');
+  b.classList.toggle('active', on);
+  b.setAttribute('aria-pressed', String(on));
+  if (!mapReady) return;
+  if (!map.getSource('heat')) {
+    map.addSource('heat', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({
+      id: 'heat', type: 'heatmap', source: 'heat', maxzoom: 15,
+      paint: {
+        'heatmap-weight': 0.6,
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 14, 2.2],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 8, 10, 22, 14, 34],
+        'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.85, 15, 0],
+        'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
+          0, 'rgba(0,0,0,0)', 0.15, 'rgba(47,139,255,.55)', 0.4, 'rgba(245,197,24,.75)', 0.7, 'rgba(255,122,46,.85)', 1, 'rgba(255,46,60,.95)'],
+      },
+    }, 'clusters');
+  }
+  map.setLayoutProperty('heat', 'visibility', on ? 'visible' : 'none');
+  for (const id of ['clusters', 'cluster-count']) map.setLayoutProperty(id, 'visibility', on ? 'none' : 'visible');
+  map.setLayerZoomRange('points', on ? 12 : 0, 24);
+  refresh();
+  toast(on ? 'Carte de chaleur : là où les faits se concentrent' : 'Retour aux épingles');
+}
+$('#heatBtn').addEventListener('click', () => { playSound('key'); setHeat(!state.heat); });
+
+// ───────────────────────── Rejouer l'histoire ─────────────────────────
+
+let replayTimer = null;
+function startReplay() {
+  stopReplay(false);
+  hideTeaser();
+  const years = [...state.facts.values()].filter(f => f.year > 0 && (!state.hidden.has(f.rubric) || f.curated)).map(f => f.year);
+  const from = Math.max(1780, Math.min(...years));
+  const to = new Date().getFullYear();
+  state.playYear = from;
+  $('#replayCard').hidden = false;
+  $('#replayBtn').classList.add('active');
+  playSound('carriage');
+  const step = () => {
+    state.playYear = Math.min(to, state.playYear + (state.playYear < 1900 ? 3 : 2));
+    $('#replayYear').textContent = state.playYear;
+    $('#replayProgress').style.width = `${((state.playYear - from) / (to - from)) * 100}%`;
+    const n = visibleFacts().length;
+    $('#replayCount').textContent = `${fmt(n)} récit${n > 1 ? 's' : ''}`;
+    refresh();
+    if (state.playYear % 10 === 0 || state.playYear % 10 === 1) playSound('key');
+    if (state.playYear >= to) { playSound('ding'); stopReplay(true); }
+  };
+  $('#replayYear').textContent = from;
+  replayTimer = setInterval(step, 220);
+}
+function stopReplay(keepCard) {
+  clearInterval(replayTimer);
+  replayTimer = null;
+  $('#replayBtn').classList.remove('active');
+  if (keepCard) { setTimeout(() => { if (!replayTimer) { $('#replayCard').hidden = true; state.playYear = null; refresh(); } }, 2500); return; }
+  $('#replayCard').hidden = true;
+  if (state.playYear != null) { state.playYear = null; refresh(); }
+}
+$('#replayBtn').addEventListener('click', () => (replayTimer ? stopReplay(false) : startReplay()));
+$('#replayStop').addEventListener('click', () => stopReplay(false));
 
 // ───────────────────────── Sommaire ─────────────────────────
 
