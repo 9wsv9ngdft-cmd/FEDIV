@@ -114,8 +114,16 @@ const WIKIDATA_TYPES = (() => {
 
 async function sparql(query) {
   const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
-  const json = await getJSON(url, { headers: { Accept: 'application/sparql-results+json' } });
-  return json.results.bindings;
+  // Le service limite les requêtes simultanées : en cas de refus, on réessaie une fois après une pause.
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const json = await getJSON(url, { headers: { Accept: 'application/sparql-results+json' } });
+      return json.results.bindings;
+    } catch (error) {
+      if (attempt >= 1) throw error;
+      await new Promise(r => setTimeout(r, 4000));
+    }
+  }
 }
 
 const parsePoint = wkt => {
@@ -224,13 +232,13 @@ async function fetchLocated(root, fallback) {
 }
 
 export async function fetchWikidataLocatedEvents() {
-  const results = await Promise.allSettled([
-    fetchLocated('Q83267', 'Crime'),
-    fetchLocated('Q171558', 'Accident'),
-    fetchLocated('Q3839081', 'Catastrophe'),
-  ]);
+  // Une requête après l'autre, pour ne pas dépasser la limite de Wikidata.
+  const facts = [];
+  for (const [root, fallback] of [['Q83267', 'Crime'], ['Q171558', 'Accident'], ['Q3839081', 'Catastrophe']]) {
+    try { facts.push(...await fetchLocated(root, fallback)); } catch { /* famille suivante */ }
+  }
   const seen = new Set();
-  return results.flatMap(r => (r.status === 'fulfilled' ? r.value : [])).filter(f => !seen.has(f.id) && seen.add(f.id));
+  return facts.filter(f => !seen.has(f.id) && seen.add(f.id));
 }
 
 // ───────────────────────── Géorisques (CatNat) ─────────────────────────

@@ -96,8 +96,9 @@ const map = new maplibregl.Map({
       { id: 'ign', type: 'raster', source: 'ign' },
     ],
   },
-  center: [2.3488, 48.8534],
-  zoom: 12.5,
+  // Toute la France au lancement : les faits historiques apparaissent en grappes sur tout le pays.
+  center: [2.45, 46.6],
+  zoom: window.innerWidth < 600 ? 4.6 : 5.4,
   minZoom: 4,
   maxZoom: 18.5,
   attributionControl: { compact: true },
@@ -669,7 +670,8 @@ function sparkline(values) {
 
 async function openBarometer() {
   const at = state.me ?? { lat: map.getCenter().lat, lon: map.getCenter().lng };
-  openSheet(`${topBar('📊 Le baromètre')}<h2 class="headline" style="font-size:30px">Recherche de la commune…</h2>`);
+  openSheet(`${topBar('📊 Le baromètre')}<h2 class="headline" style="font-size:30px">Recherche de la commune…</h2>
+    <p class="note">Lecture des registres de la police et de la gendarmerie : une dizaine de secondes.</p>`);
   const commune = await communeAt(at.lat, at.lon);
   if (sheet.hidden) return;
   if (!commune) {
@@ -867,8 +869,8 @@ renderRubricBar();
 async function start() {
   track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
-  setTimeout(() => {
-    track('wikidata', fetchWikidataEvents().then(addFacts));
+  setTimeout(async () => {
+    await track('wikidata', fetchWikidataEvents().then(addFacts));
     track('located', fetchWikidataLocatedEvents().then(addFacts));
   }, 800);
 
