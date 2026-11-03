@@ -207,7 +207,10 @@ function refresh() {
     refreshQueued = false;
     const heat = state.heat && map.getSource?.('heat');
     if (heat) {
-      heat.setData({ type: 'FeatureCollection', features: visibleFacts().map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) });
+      const list = visibleFacts();
+      heat.setData({ type: 'FeatureCollection', features: list.map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) });
+      // Plus il y a de récits, plus chacun pèse peu : la carte reste lisible de 500 à 50 000 points.
+      map.setPaintProperty('heat', 'heatmap-weight', Math.min(0.8, Math.max(0.012, 300 / Math.max(list.length, 1))));
     }
     const source = map.getSource?.('facts');
     if (source) {
@@ -493,6 +496,8 @@ function wrapText(ctx, text, maxWidth) {
 /** Dessine une fiche de dossier 1080 × 1350 (format portrait des réseaux) et la partage. */
 async function shareCard(f) {
   if (f.ariaNumber) await loadAriaDetail(f);
+  const shown = $('#articleBody')?.innerText?.trim();
+  const text = shown && shown.length > (f.summary || '').length ? shown : f.summary;
   await document.fonts?.ready;
   const W = 1080, H = 1350;
   const c = document.createElement('canvas');
@@ -526,7 +531,9 @@ async function shareCard(f) {
   for (const line of wrapText(x, f.place, 780).slice(0, 2)) { x.fillText(line, -390, y); y += 40; }
   x.fillStyle = '#2a241c'; x.font = '30px "Special Elite", monospace';
   y += 24;
-  for (const line of wrapText(x, f.summary || '', 780).slice(0, Math.max(3, Math.floor((420 - y) / 44)))) { x.fillText(line, -390, y); y += 44; }
+  const body = wrapText(x, text || '', 780);
+  const room = Math.max(3, Math.floor((330 - y) / 44));
+  body.slice(0, room).forEach((line, i) => { x.fillText(i === room - 1 && body.length > room ? line.replace(/\s*\S*$/, ' …') : line, -390, y); y += 44; });
   // Tampon
   x.save(); x.translate(230, 400); x.rotate(-0.2); x.globalAlpha = .55;
   x.strokeStyle = '#c0271d'; x.lineWidth = 6; x.strokeRect(-170, -40, 340, 80);
@@ -956,8 +963,8 @@ function setHeat(on) {
       id: 'heat', type: 'heatmap', source: 'heat', maxzoom: 15,
       paint: {
         'heatmap-weight': 0.6,
-        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.6, 14, 2.2],
-        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 8, 10, 22, 14, 34],
+        'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 4, 0.5, 9, 1.2, 14, 3],
+        'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 4, 6, 9, 14, 14, 30],
         'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.85, 15, 0],
         'heatmap-color': ['interpolate', ['linear'], ['heatmap-density'],
           0, 'rgba(0,0,0,0)', 0.15, 'rgba(47,139,255,.55)', 0.4, 'rgba(245,197,24,.75)', 0.7, 'rgba(255,122,46,.85)', 1, 'rgba(255,46,60,.95)'],
