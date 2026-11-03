@@ -78,12 +78,20 @@ export function setLight(mode) {
   btn.classList.toggle('active', mode !== 'off');
   btn.setAttribute('aria-label', mode === 'off' ? 'Allumer la lampe torche' : 'Éteindre la lampe torche');
   const { map } = ctx;
+  // Lampe allumée : un doigt promène la lumière sans bouger la carte ; deux doigts la déplacent.
+  try {
+    if (mode !== 'off') map.cooperativeGestures.enable(); else map.cooperativeGestures.disable();
+    if (mode !== 'off') map.dragPan.disable(); else map.dragPan.enable();
+    if (mode !== 'off' && window.matchMedia('(pointer: coarse)').matches) map.dragPan.enable();
+  } catch { /* ancienne version de la carte */ }
   // Sous le faisceau, de légères traces bleues révèlent les lieux de crimes (façon Luminol).
   if (ctx.mapReady()) {
     if (mode !== 'off') ensureLuminolLayers();
     for (const id of ['luminol-glow', 'luminol-spots']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode !== 'off' ? 'visible' : 'none');
   }
-  if (mode !== 'off') ctx.toast('Lampe torche : promène ton doigt, les traces de crimes brillent sous le faisceau');
+  if (mode !== 'off') ctx.toast(window.matchMedia('(pointer: coarse)').matches
+    ? 'Lampe torche : un doigt pour éclairer, deux doigts pour bouger la carte'
+    : 'Lampe torche : déplace la souris pour éclairer');
   ctx.playSound(mode === 'off' ? 'key' : 'stamp');
 }
 

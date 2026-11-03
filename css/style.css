@@ -556,3 +556,6 @@ button:focus:not(:focus-visible) { outline: none; }
 /* Le faisceau éclaire vraiment la carte (lumière chaude, ou violette en UV) */
 .torch::after { content: ''; position: absolute; inset: 0; mix-blend-mode: screen;
   background: radial-gradient(circle at var(--x) var(--y), rgba(255,235,190,.42) 0, rgba(255,225,170,.22) 60px, rgba(255,220,160,0) 125px); }
+
+/* Lampe torche : pas de message « utilisez deux doigts » par-dessus la carte */
+.maplibregl-cooperative-gesture-screen { display: none !important; }
