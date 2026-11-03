@@ -577,6 +577,7 @@ function showBoardOnMap(fit = false) {
     ...pins.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: { id: p.id } })),
   ] });
   if (fit) {
+    hideTeaser();
     const b = new maplibregl.LngLatBounds();
     pins.forEach(p => b.extend([p.lon, p.lat]));
     map.fitBounds(b, { padding: { top: 190, bottom: window.innerWidth < 900 ? 220 : 60, left: window.innerWidth < 900 ? 50 : 420, right: 70 }, maxZoom: 15, duration: 900 });
@@ -847,6 +848,7 @@ async function buildCircuit(theme) {
   }
   if (stops.length < 4) { toast('Pas assez de récits sur ce thème par ici : déplace la carte ou essaie un autre circuit.'); return; }
   closeSheet();
+  hideTeaser();
   stops.forEach(f => ensureVisible(f));
   let length = 0;
   for (let i = 1; i < stops.length; i++) length += distance(stops[i - 1].lat, stops[i - 1].lon, stops[i].lat, stops[i].lon);
