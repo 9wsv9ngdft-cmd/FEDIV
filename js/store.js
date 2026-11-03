@@ -8,7 +8,7 @@ const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(v
 export const settings = {
   appearance: read('fediv.appearance', 'auto'),   // auto | light | dark
   sound: read('fediv.sound', true),
-  volume: read('fediv.volume', 0.5),
+  volume: read('fediv.volume', 0.6),
   readingSize: read('fediv.readingSize', 'normal'), // small | normal | large
   welcomed: read('fediv.welcomed', false),
   quizBest: read('fediv.quizBest', 0),
@@ -52,34 +52,120 @@ export const carnet = {
 };
 
 // ───────────────────────── Sons ─────────────────────────
-// Petits bruits synthétisés (machine à écrire, page, clochette) : aucun fichier audio à télécharger.
+// Banque de sons « enquête », synthétisée à la volée (aucun fichier à télécharger) :
+// clic de stylo, froissement de dossier, coup de tampon, radio de police, pin-pon discret.
+// Tout passe par un filtre doux et un limiteur pour que rien ne soit agressif.
 
-let audio = null;
-export function playSound(kind) {
-  if (!settings.sound) return;
-  try {
-    audio ??= new (window.AudioContext || window.webkitAudioContext)();
-    const now = audio.currentTime;
-    const gain = audio.createGain();
-    gain.connect(audio.destination);
-    const v = settings.volume * 0.35;
-    if (kind === 'bell') {
-      const o = audio.createOscillator();
-      o.type = 'sine'; o.frequency.setValueAtTime(1320, now);
-      gain.gain.setValueAtTime(v, now); gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.9);
-      o.connect(gain); o.start(now); o.stop(now + 0.9);
-    } else {
-      const length = kind === 'page' ? 0.25 : 0.04;
-      const buffer = audio.createBuffer(1, Math.floor(audio.sampleRate * length), audio.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, kind === 'page' ? 1.5 : 6);
-      const src = audio.createBufferSource();
-      src.buffer = buffer;
-      const filter = audio.createBiquadFilter();
-      filter.type = kind === 'page' ? 'bandpass' : 'highpass';
-      filter.frequency.value = kind === 'page' ? 2500 : 1800;
-      gain.gain.setValueAtTime(v, now);
-      src.connect(filter); filter.connect(gain); src.start(now);
+let ctx = null;
+let master = null;
+
+function audio() {
+  if (!ctx) {
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const soften = ctx.createBiquadFilter();
+    soften.type = 'lowpass';
+    soften.frequency.value = 4200;
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -22;
+    limiter.ratio.value = 8;
+    master = ctx.createGain();
+    master.connect(soften).connect(limiter).connect(ctx.destination);
+  }
+  if (ctx.state === 'suspended') ctx.resume();
+  master.gain.value = 0.5 * settings.volume;
+  return ctx;
+}
+
+/** Bruit filtré avec une enveloppe (clic, froissement, grésillement). */
+function noise(t, { duration, type = 'bandpass', freq = 1500, q = 1, gain = 0.3, attack = 0.002, curve = 3 }) {
+  const a = ctx;
+  const buffer = a.createBuffer(1, Math.ceil(a.sampleRate * duration), a.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / data.length, curve);
+  const src = a.createBufferSource();
+  src.buffer = buffer;
+  const filter = a.createBiquadFilter();
+  filter.type = type;
+  filter.frequency.value = freq;
+  filter.Q.value = q;
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  src.connect(filter).connect(g).connect(master);
+  src.start(t);
+  src.stop(t + duration + 0.02);
+  return filter;
+}
+
+/** Note douce (sinus ou triangle) avec glissement de hauteur facultatif. */
+function tone(t, { freq, to = freq, duration, type = 'sine', gain = 0.2, attack = 0.01 }) {
+  const a = ctx;
+  const o = a.createOscillator();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, t);
+  if (to !== freq) o.frequency.exponentialRampToValueAtTime(to, t + duration);
+  const g = a.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(gain, t + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  o.connect(g).connect(master);
+  o.start(t);
+  o.stop(t + duration + 0.02);
+}
+
+const SOUNDS = {
+  // Clic de stylo-bille : deux petits clics feutrés.
+  tap(t) {
+    noise(t, { duration: 0.025, freq: 2600, q: 2.5, gain: 0.22, curve: 6 });
+    noise(t + 0.045, { duration: 0.02, freq: 1900, q: 2.5, gain: 0.12, curve: 6 });
+  },
+  // Dossier qu'on ouvre : froissement de papier.
+  folder(t) {
+    const f = noise(t, { duration: 0.32, freq: 900, q: 0.7, gain: 0.16, attack: 0.06, curve: 1.6 });
+    f.frequency.setValueAtTime(700, t);
+    f.frequency.linearRampToValueAtTime(2200, t + 0.3);
+  },
+  // Coup de tampon : un « toc » sourd sur le bureau.
+  stamp(t) {
+    tone(t, { freq: 150, to: 60, duration: 0.18, gain: 0.45, attack: 0.003 });
+    noise(t, { duration: 0.06, type: 'lowpass', freq: 900, gain: 0.25, curve: 4 });
+    noise(t + 0.01, { duration: 0.12, freq: 380, q: 1.2, gain: 0.12, curve: 2 });
+  },
+  // Radio de police : grésillement, double bip discret, fin de transmission.
+  radio(t) {
+    noise(t, { duration: 0.12, freq: 1700, q: 0.8, gain: 0.09, attack: 0.01, curve: 0.8 });
+    tone(t + 0.13, { freq: 1046, duration: 0.09, type: 'triangle', gain: 0.07 });
+    tone(t + 0.25, { freq: 1318, duration: 0.11, type: 'triangle', gain: 0.07 });
+    noise(t + 0.4, { duration: 0.08, freq: 2200, q: 0.9, gain: 0.06, curve: 1 });
+  },
+  // Pin-pon à la française, tout bas et très court (435 / 580 Hz).
+  pinpon(t) {
+    for (let i = 0; i < 2; i++) {
+      tone(t + i * 0.44, { freq: 435, duration: 0.2, type: 'triangle', gain: 0.07, attack: 0.03 });
+      tone(t + i * 0.44 + 0.22, { freq: 580, duration: 0.2, type: 'triangle', gain: 0.07, attack: 0.03 });
     }
+  },
+  // Bonne réponse : deux notes claires qui montent.
+  success(t) {
+    tone(t, { freq: 523, duration: 0.16, gain: 0.1 });
+    tone(t + 0.12, { freq: 784, duration: 0.3, gain: 0.1 });
+  },
+  // Mauvaise réponse : un « tss » grave, sans agresser.
+  fail(t) {
+    tone(t, { freq: 220, to: 165, duration: 0.28, type: 'triangle', gain: 0.1 });
+  },
+};
+
+export const SOUND_NAMES = {
+  tap: 'Clic de stylo', folder: 'Dossier', stamp: 'Coup de tampon', radio: 'Radio de police',
+  pinpon: 'Pin-pon', success: 'Bonne réponse', fail: 'Mauvaise réponse',
+};
+
+export function playSound(kind, force = false) {
+  if (!settings.sound && !force) return;
+  try {
+    const a = audio();
+    (SOUNDS[kind] ?? SOUNDS.tap)(a.currentTime + 0.01);
   } catch { /* pas d'audio */ }
 }

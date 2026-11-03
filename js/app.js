@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=9';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=13';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=9';
-import { settings, carnet, playSound } from './store.js?v=9';
+} from './sources.js?v=13';
+import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=13';
 
 // ───────────────────────── Outils ─────────────────────────
 
@@ -234,7 +234,7 @@ $('#rubricBar').addEventListener('click', e => {
   if (id === '*') state.hidden.clear();
   else if (state.hidden.has(id)) state.hidden.delete(id);
   else state.hidden.add(id);
-  playSound(state.hidden.has(id) ? 'typewriter' : 'bell');
+  playSound('tap');
   ensureSourcesForFilters();
   refresh();
 });
@@ -246,7 +246,7 @@ $('#eraBar').addEventListener('click', e => {
   const chip = e.target.closest('[data-era]');
   if (!chip) return;
   state.era = ERAS.find(x => x.id === chip.dataset.era);
-  playSound('typewriter');
+  playSound('tap');
   renderEraBar();
   refresh();
 });
@@ -289,7 +289,7 @@ function setStatus() {
 // ───────────────────────── Chronique ─────────────────────────
 
 const chronicle = $('#chronicle');
-$('#chronicleToggle').addEventListener('click', () => { chronicle.classList.toggle('open'); playSound('page'); });
+$('#chronicleToggle').addEventListener('click', () => { chronicle.classList.toggle('open'); playSound('folder'); });
 chronicle.querySelector('.chronicle-head').addEventListener('click', () => {
   if (window.innerWidth < 900) chronicle.classList.toggle('open');
 });
@@ -326,7 +326,7 @@ $('#clippings').addEventListener('click', e => {
 
 function showTeaser(f) {
   state.selected = f;
-  playSound('typewriter');
+  playSound('tap');
   const el = $('#teaser');
   const d = state.me ? ` · à ${distanceLabel(distance(state.me.lat, state.me.lon, f.lat, f.lon))}` : '';
   el.style.setProperty('--tint', RUBRIC_BY_ID[f.rubric].color);
@@ -361,7 +361,7 @@ function openSheet(html, onClose, view = '') {
   sheet.hidden = false;
   sheet.scrollTop = 0;
   sheetOnClose = onClose ?? null;
-  playSound('page');
+  playSound('folder');
   sheetInner.querySelectorAll('[data-close]').forEach(b => { b.onclick = closeSheet; });
 }
 function closeSheet() {
@@ -414,7 +414,7 @@ async function openArticle(f) {
     </div>
     ${onSite ? '<div class="stamp">Vu sur place</div>' : isNew ? '<div class="stamp">Classé au carnet</div>' : ''}
   `, null, 'article');
-  if (isNew) { playSound('bell'); toast(onSite ? 'Tampon « sur place » ajouté au carnet !' : 'Récit tamponné dans ton carnet'); }
+  if (isNew) { playSound('stamp'); toast(onSite ? 'Tampon « sur place » ajouté au carnet !' : 'Récit tamponné dans ton carnet'); }
   sheetInner.querySelector('[data-time]').onclick = () => openTimeMachine(f);
   sheetInner.querySelector('[data-share]').onclick = () => shareFact(f);
 
@@ -634,7 +634,7 @@ async function buildCircuit(theme) {
     c.index = (c.index + 1) % c.stops.length;
     e.target.textContent = `Étape ${c.index + 1}`;
   };
-  playSound('bell');
+  playSound('pinpon');
 }
 
 function endCircuit() {
@@ -696,7 +696,7 @@ async function openQuiz(index = 0, score = 0) {
         if (Number(x.dataset.i) === q.answer) x.classList.add('right');
       });
       if (!right) b.classList.add('wrong');
-      playSound(right ? 'bell' : 'typewriter');
+      playSound(right ? 'success' : 'fail');
       $('#verdict').innerHTML = `<p class="stamp" style="margin-top:4px">${right ? 'Bien vu' : 'Raté'}</p><div class="article-body"><p>${esc(q.verdict)}</p></div>
         <div class="actions"><button class="btn primary" data-next>${index + 1 < quizCases.length ? 'Affaire suivante →' : 'Voir le score'}</button></div>`;
       $('#verdict [data-next]').onclick = () => openQuiz(index + 1, score + (right ? 1 : 0));
@@ -803,7 +803,7 @@ function toggleWalk() {
       banner.textContent = `Extra ! Extra ! À ${distanceLabel(bestD)} : ${best.title}`;
       banner.hidden = false;
       banner.onclick = () => { banner.hidden = true; showTeaser(best); };
-      playSound('bell');
+      playSound('radio');
       navigator.vibrate?.(200);
       setTimeout(() => { banner.hidden = true; }, 12000);
     }
@@ -814,7 +814,7 @@ function toggleWalk() {
 
 // ───────────────────────── Sommaire ─────────────────────────
 
-function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('page'); }
+function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('folder'); }
 function closeMenu() { $('#menu').hidden = true; $('#menuScrim').hidden = true; }
 $('#menuBtn').addEventListener('click', openMenu);
 $('#menuScrim').addEventListener('click', closeMenu);
@@ -895,7 +895,7 @@ searchResults.addEventListener('click', e => {
   closeSearch();
   if (b.dataset.kind === 'place') {
     map.flyTo({ center: [Number(b.dataset.lon), Number(b.dataset.lat)], zoom: Number(b.dataset.zoom) });
-    playSound('page');
+    playSound('tap');
   } else {
     const f = state.facts.get(b.dataset.id);
     if (!f) return;
@@ -919,6 +919,8 @@ function openSettings() {
     <div class="settings-group"><h4>Son</h4>
       ${row('🔔', '#ff3b30', 'Bruitages', `<input type="checkbox" class="switch" id="setSound">`)}
       ${row('🔊', '#ff9500', 'Volume', `<input type="range" id="setVolume" min="0" max="1" step="0.05">`)}
+      <div class="setting sound-test"><span class="ico" style="background:#1f5fd1">🎧</span><span class="lbl">Écouter</span>
+        <div class="sound-chips">${Object.entries(SOUND_NAMES).map(([k, v]) => `<button class="chip" data-sound="${k}">${v}</button>`).join('')}</div></div>
     </div>
     <div class="settings-group"><h4>Lecture</h4>
       ${row('Aa', '#007aff', 'Taille du texte', `<select id="setReading"><option value="small">Petite</option><option value="normal">Normale</option><option value="large">Grande</option></select>`)}
@@ -938,9 +940,10 @@ function openSettings() {
     });
   };
   bind('#setAppearance', 'appearance');
-  bind('#setSound', 'sound', 'checked', () => playSound('bell'));
-  bind('#setVolume', 'volume', 'value', () => playSound('typewriter'));
+  bind('#setSound', 'sound', 'checked', () => playSound('radio'));
+  bind('#setVolume', 'volume', 'value', () => playSound('tap'));
   bind('#setReading', 'readingSize');
+  sheetInner.querySelectorAll('[data-sound]').forEach(b => { b.onclick = () => playSound(b.dataset.sound, true); });
   $('#setCarnet').onclick = openCarnet;
   $('#setAbout').onclick = openAbout;
 }

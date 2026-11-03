@@ -458,3 +458,8 @@ button:focus:not(:focus-visible) { outline: none; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Réglages : écouter les sons */
+.sound-test { flex-wrap: wrap; }
+.sound-chips { display: flex; flex-wrap: wrap; gap: 6px; width: 100%; padding-left: 42px; }
+.sound-chips .chip { box-shadow: none; font-size: 12px; padding: 5px 10px; }
