@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://data.geopf.fr">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link href="css/style.css?v=19" rel="stylesheet">
+  <link href="css/style.css?v=20" rel="stylesheet">
 </head>
 <body>
   <!-- Écran d'ouverture -->
@@ -82,7 +82,11 @@
     <button class="round-btn" id="randomBtn" aria-label="Une affaire au hasard" title="Une affaire au hasard">🎲</button>
     <button class="round-btn" id="heatBtn" aria-label="Carte de chaleur" title="Carte de chaleur" aria-pressed="false">🌡</button>
     <button class="round-btn" id="replayBtn" aria-label="Rejouer l’histoire" title="Rejouer l’histoire">▶</button>
+    <button class="round-btn" id="torchBtn" aria-label="Lampe torche" title="Lampe torche, puis Luminol">🔦</button>
   </div>
+
+  <!-- Lampe torche / lumière UV -->
+  <div class="torch" id="torch" hidden aria-hidden="true"></div>
 
   <!-- Rejouer l'histoire -->
   <div class="replay-card" id="replayCard" hidden aria-live="polite">
@@ -122,6 +126,8 @@
     <button data-open="carnet"><span>📒</span><b>Carnet d'enquêteur</b><small>Tes tampons et tes insignes</small></button>
     <button data-open="quiz"><span>🕵</span><b>Qui a fait le coup ?</b><small>Dix affaires anciennes à résoudre</small></button>
     <button data-open="barometer"><span>📊</span><b>Le baromètre</b><small>Délinquance enregistrée dans la commune</small></button>
+    <button data-open="compass"><span>🧭</span><b>Boussole de l’enquêteur</b><small>Une flèche vers l’affaire la plus proche</small></button>
+    <button data-open="stakeout"><span>🕵</span><b>La planque</b><small>Pose le téléphone, écoute les affaires du quartier</small></button>
     <button data-open="walk"><span>🚶</span><b id="walkLabel">Mode promenade</b><small>Être prévenu en passant près d'un lieu</small></button>
     <button data-open="about"><span>ℹ</span><b>À propos et sources</b><small>D'où viennent les récits</small></button>
     <button data-open="privacy"><span>🔒</span><b>Confidentialité</b><small>Ce que l'app fait (et ne fait pas) de tes données</small></button>
@@ -135,6 +141,6 @@
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=24"></script>
+  <script type="module" src="js/app.js?v=25"></script>
 </body>
 </html>

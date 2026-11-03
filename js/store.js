@@ -11,6 +11,7 @@ export const settings = {
   volume: read('fediv.volume', 0.6),
   readingSize: read('fediv.readingSize', 'normal'), // small | normal | large
   welcomed: read('fediv.welcomed', false),
+  shake: read('fediv.shake', false),
   quizBest: read('fediv.quizBest', 0),
   save(key) { write(`fediv.${key}`, this[key]); },
 };

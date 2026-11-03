@@ -1,13 +1,14 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=22';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=25';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=22';
-import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=22';
+} from './sources.js?v=25';
+import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
+import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=25';
 
-const APP_VERSION = 'version 1.7';
+const APP_VERSION = 'version 1.8';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -62,7 +63,7 @@ function addFacts(list) {
     state.facts.set(f.id, f);
     added++;
   }
-  if (added) refresh();
+  if (added) { refresh(); lightRefresh(); }
   return added;
 }
 
@@ -380,8 +381,10 @@ const sheetInner = $('#sheetInner');
 let sheetOnClose = null;
 
 function openSheet(html, onClose, view = '') {
+  sheetOnClose?.();
   sheetInner.innerHTML = html;
   sheetInner.dataset.view = view;
+  sheetInner.dataset.age = '';
   sheet.hidden = false;
   sheet.scrollTop = 0;
   sheetOnClose = onClose ?? null;
@@ -440,9 +443,12 @@ async function openArticle(f) {
       <button class="btn" data-share>↗ Partager le lien</button>
       <button class="btn" data-card>🗂 Partager la fiche</button>
     </div>
+    ${/non[- ]élucid|non résolu|jamais élucid|jamais résolu/i.test(`${f.title} ${f.category} ${f.summary}`) ? '<div class="stamp stamp-cold">Non élucidé</div>' : ''}
     ${onSite ? '<div class="stamp">Vu sur place</div>' : isNew ? '<div class="stamp">Classé au carnet</div>' : ''}
     ${nearbyHTML(f)}
   `, null, 'article');
+  // Le papier vieillit avec l'affaire : jauni et taché avant 1950, très ancien avant 1900.
+  sheetInner.dataset.age = f.year && f.year < 1900 ? 'ancien' : f.year && f.year < 1950 ? 'vieux' : '';
   sheetInner.querySelectorAll('[data-near]').forEach(el => {
     el.onclick = () => { const g = state.facts.get(el.dataset.near); if (g) { ensureVisible(g); map.jumpTo({ center: [g.lon, g.lat], zoom: Math.max(map.getZoom(), 15) }); openArticle(g); } };
   });
@@ -1149,7 +1155,7 @@ $('#menu').addEventListener('click', e => {
   const b = e.target.closest('[data-open]');
   if (!b) return;
   closeMenu();
-  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy, board: openBoard })[b.dataset.open]();
+  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy, board: openBoard, compass: openCompass, stakeout: openStakeout })[b.dataset.open]();
 });
 
 // ───────────────────────── Recherche ─────────────────────────
@@ -1250,6 +1256,7 @@ function openSettings() {
         <div class="sound-chips">${Object.entries(SOUND_NAMES).map(([k, v]) => `<button class="chip" data-sound="${k}">${v}</button>`).join('')}</div></div>
     </div>
     <div class="settings-group"><h4>Lecture</h4>
+      ${row('📳', '#af52de', 'Secouer pour une affaire au hasard', `<input type="checkbox" class="switch" id="setShake">`)}
       ${row('Aa', '#007aff', 'Taille du texte', `<select id="setReading"><option value="small">Petite</option><option value="normal">Normale</option><option value="large">Grande</option></select>`)}
     </div>
     <div class="settings-group"><h4>Données</h4>
@@ -1272,6 +1279,15 @@ function openSettings() {
   bind('#setVolume', 'volume', 'value', () => playSound('key'));
   bind('#setReading', 'readingSize');
   sheetInner.querySelectorAll('[data-sound]').forEach(b => { b.onclick = () => playSound(b.dataset.sound, true); });
+  const shake = $('#setShake');
+  shake.checked = settings.shake;
+  shake.addEventListener('change', async () => {
+    const ok = await setShake(shake.checked);
+    if (!ok) { shake.checked = false; toast('L’iPhone refuse l’accès aux mouvements : autorise-le dans Réglages › Safari.'); }
+    settings.shake = shake.checked;
+    settings.save('shake');
+    if (shake.checked) toast('Secoue ton téléphone pour tirer une affaire au hasard');
+  });
   $('#setCarnet').onclick = openCarnet;
   $('#setAbout').onclick = openAbout;
 }
@@ -1368,6 +1384,16 @@ if ('serviceWorker' in navigator) {
 
 // Toucher le titre ramène à la vue de toute la France.
 $('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 46.6], zoom: window.innerWidth < 600 ? 4.6 : 5.4 }));
+
+initModes({
+  map, state, mapReady: () => mapReady, toast, playSound, openSheet, closeSheet, topBar,
+  distance, distanceLabel, isVisible, ensureVisible, openArticle, setMe,
+});
+// « Secouer » : sur iPhone, l'autorisation doit suivre un geste ; on la redemande au premier toucher.
+if (settings.shake) {
+  if (typeof DeviceMotionEvent?.requestPermission === 'function') document.addEventListener('click', () => setShake(true), { once: true });
+  else setShake(true);
+}
 
 async function start() {
   const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
