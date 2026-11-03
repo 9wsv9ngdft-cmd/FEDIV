@@ -1,11 +1,11 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=2';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=3';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=2';
-import { settings, carnet, playSound } from './store.js?v=2';
+} from './sources.js?v=3';
+import { settings, carnet, playSound } from './store.js?v=3';
 
 // ───────────────────────── Outils ─────────────────────────
 
@@ -61,7 +61,10 @@ function addFacts(list) {
   return added;
 }
 
-const isVisible = f => !state.hidden.has(f.rubric) && eraContains(state.era, f.year);
+/** « Histoire » montre les grands faits historiques sourcés (Wikipédia), quel que soit leur type ;
+ *  les autres rubriques ajoutent tous les récits de leur type (Wikidata, ARIA, Géorisques). */
+const isVisible = f => eraContains(state.era, f.year)
+  && (!state.hidden.has(f.rubric) || (f.curated && !state.hidden.has('history')));
 const visibleFacts = () => [...state.facts.values()].filter(isVisible);
 
 // ───────────────────────── Thème ─────────────────────────
@@ -521,7 +524,7 @@ function openUne() {
 /** Rend visible la rubrique et l'époque d'un récit ouvert depuis ailleurs (Une, carnet, lien partagé). */
 function ensureVisible(f) {
   let changed = false;
-  if (state.hidden.has(f.rubric)) { state.hidden.delete(f.rubric); changed = true; }
+  if (!isVisible(f) && state.hidden.has(f.rubric)) { state.hidden.delete(f.rubric); changed = true; }
   if (!eraContains(state.era, f.year)) { state.era = ERAS[0]; renderEraBar(); changed = true; }
   if (changed) { ensureSourcesForFilters(); refresh(); }
 }
@@ -850,7 +853,7 @@ function openWelcome() {
     <h2 class="headline">Les faits divers vous attendent au coin de la rue</h2>
     <div class="article-body">
       <p>Promène-toi sur la carte : chaque épingle est un récit — grande affaire, catastrophe, accident, fait d’histoire — survenu à l’endroit même.</p>
-      <p>Au départ, seule l’<b>Histoire</b> est affichée. Coche en haut les rubriques qui t’intéressent : crimes, accidents, incendies, catastrophes naturelles… et choisis une époque.</p>
+      <p>Au départ, la carte montre l’<b>Histoire</b> : 580 grandes affaires, catastrophes et faits divers restés célèbres. Coche en haut les rubriques qui t’intéressent (crimes, accidents, incendies, catastrophes naturelles…) pour ajouter des milliers d’autres récits, et choisis une époque.</p>
       <p>Dans le <b>Sommaire</b> (☰) : la Une du jour, des circuits à pied, ton carnet d’enquêteur, un quiz et le baromètre de la délinquance.</p>
     </div>
     <div class="actions"><button class="btn red" data-go>Ouvrir le journal</button><button class="btn" data-locate>◎ Me localiser</button></div>`,

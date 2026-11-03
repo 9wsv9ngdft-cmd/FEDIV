@@ -7,7 +7,7 @@ C'est la version web de l'app iOS Fediv. Elle tourne entièrement dans le naviga
 ## Fonctions
 
 - **Carte** au plan IGN, façon gravure ou en couleurs, avec regroupement des épingles.
-- **Rubriques** : Histoire (seule affichée au lancement), crimes et vols, attentats, accidents, incendies, explosions, catastrophes naturelles, pollutions.
+- **Rubriques** : Histoire (affichée seule au lancement : les 580 grands faits historiques sourcés par Wikipédia, tous types confondus), crimes et vols, attentats, accidents, incendies, explosions, catastrophes naturelles, pollutions.
 - **Époques** : Belle Époque, guerres, seconde moitié du XXe siècle, aujourd'hui.
 - **La chronique** : les récits visibles sur la carte, du plus proche au plus lointain.
 - **Article « à la une »** avec le résumé de Wikipédia et une gravure, fiche signalétique, lien vers la source, itinéraire et partage (lien direct `#fait=…`).

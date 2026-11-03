@@ -2,7 +2,7 @@
 // (Wikidata, Géorisques, Wikipédia). Aucune position personnelle n'est envoyée : Wikidata est interrogé
 // pour toute la France, Géorisques autour du centre de la carte arrondi à ~1 km.
 
-import { family } from './rubrics.js?v=2';
+import { family } from './rubrics.js?v=3';
 
 const FRANCE = { minLat: 41.2, maxLat: 51.2, minLon: -5.3, maxLon: 9.7 };
 const inFrance = (lat, lon) => lat > FRANCE.minLat && lat < FRANCE.maxLat && lon > FRANCE.minLon && lon < FRANCE.maxLon;
@@ -35,6 +35,7 @@ async function getJSON(url, options = {}) {
 export async function loadLocal() {
   const rows = await getJSON('data/local.json');
   return rows.map(r => makeFact({
+    curated: true,
     id: r.id, title: r.title, summary: r.summary, category: r.category, place: r.place,
     lat: r.latitude, lon: r.longitude, date: r.eventDate, year: r.eventYear,
     sourceName: r.sourceName, sourceURL: r.sourceURL,
@@ -45,6 +46,7 @@ export async function loadLocal() {
 export async function loadHistory() {
   const rows = await getJSON('data/histoire.json');
   return rows.map(([n, title, lat, lon, year, date, category, desc, article]) => makeFact({
+    curated: true,
     id: `wd-Q${n}`, title, category,
     summary: desc ? capitalizedFirst(desc) + '.' : 'Ouvre la fiche pour lire le résumé de l’article.',
     place: 'Lieu indiqué par Wikipédia et Wikidata', lat, lon, date, year,
