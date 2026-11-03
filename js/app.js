@@ -7,7 +7,7 @@ import {
 } from './sources.js?v=26';
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
 import { initModes, lightRefresh, openCompass, openStakeout, setShake, keepAwake } from './modes.js?v=33';
-import { initAR, openAR } from './ar.js?v=1';
+import { initAR, openAR } from './ar.js?v=2';
 
 const APP_VERSION = 'version 1.14';
 const APP_DATE = 'mise à jour du 3 novembre 2026';

@@ -130,7 +130,11 @@ function frame() {
     let y = h * 0.46 - (elev - pitch) * pxPerDeg;
     const scale = 1.05 - near * 0.45;
     // Évite que deux fiches se recouvrent : on décale vers le haut.
-    for (const p of placed) if (Math.abs(p.x - x) < 150 * Math.max(scale, p.s) && Math.abs(p.y - y) < 62 * Math.max(scale, p.s)) y = p.y - 66 * Math.max(scale, p.s);
+    for (let pass = 0; pass < 8; pass++) {
+      const hit = placed.find(p => Math.abs(p.x - x) < 205 * (scale + p.s) / 2 && Math.abs(p.y - y) < 78 * (scale + p.s) / 2);
+      if (!hit) break;
+      y = hit.y - 80 * (scale + hit.s) / 2;
+    }
     placed.push({ x, y, s: scale });
     y = Math.max(110, Math.min(h - 210, y));
     node.style.opacity = 1;
