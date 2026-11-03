@@ -411,3 +411,7 @@ a { color: var(--red); }
 [data-style='nuit'] .chronicle::after { background: #c9ae7c; color: #1d1a16; }
 [data-style='nuit'] .sheet-inner { background-color: #f6eedc; --ink: #1d1a16; --faded: #5f523f; --rule: #a8895a; --sheet: #f3ead6; color: #1d1a16; }
 [data-style='nuit'] .drawer { --ink: #eef2f8; }
+
+/* Le gyrophare et la punaise gardent leurs vraies couleurs en mode nuit */
+:root[data-style] .masthead.paper::before,
+:root[data-style] .teaser.paper::before { filter: none; mix-blend-mode: normal; opacity: 1; }
