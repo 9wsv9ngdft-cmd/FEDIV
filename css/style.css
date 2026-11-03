@@ -406,7 +406,7 @@ a { color: var(--red); }
 [data-style='nuit'] .masthead h1 { color: #fff; text-shadow: 0 0 12px rgba(47,139,255,.6); }
 [data-style='nuit'] .dateline { color: var(--tape); }
 [data-style='nuit'] .masthead::before { height: 5px; opacity: 1; }
-[data-style='nuit'] .chip { background: rgba(16,26,42,.88); color: #eef2f8; border-color: #2c3a4f; backdrop-filter: blur(6px); }
+[data-style='nuit'] .chip { background: rgba(16,26,42,.94); color: #eef2f8; border-color: #2c3a4f; }
 [data-style='nuit'] .chip:not(.off):not(.reset) { border-color: var(--chip); box-shadow: 0 0 8px color-mix(in srgb, var(--chip) 45%, transparent); }
 [data-style='nuit'] .era-bar .chip.on { background: var(--tape); color: #111; border-color: var(--tape); }
 [data-style='nuit'] .icon-btn, [data-style='nuit'] .round-btn { background: #182235; color: #fff; border-color: #2c3a4f; }
@@ -487,3 +487,20 @@ button:focus:not(:focus-visible) { outline: none; }
 .near b { font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 17px; }
 
 @media (min-width: 900px) { .replay-card { left: calc(50% + 190px); bottom: 40px; } }
+
+/* Fluidité : animations sur le compositeur, listes allégées */
+.chronicle, .teaser, .sheet-inner, .drawer { will-change: transform; }
+.clipping { content-visibility: auto; contain-intrinsic-size: auto 78px; }
+.chronicle { transition: transform 0.38s cubic-bezier(.22,.9,.24,1); }
+.teaser { animation-duration: .22s; }
+.sheet-inner { animation-duration: .24s; }
+
+/* Tableau d'enquête */
+.board { position: relative; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 22px 16px; padding: 26px 14px 18px; margin: 10px 0;
+  background-color: #8a5d34; background-image: radial-gradient(rgba(0,0,0,.18) 1px, transparent 1.6px), radial-gradient(rgba(255,230,190,.12) 1px, transparent 1.4px);
+  background-size: 7px 7px, 11px 11px; border: 10px solid #5b3a1e; border-radius: 4px; box-shadow: inset 0 0 18px rgba(0,0,0,.4); }
+.board-card { position: relative; background: #fffdf6; color: #1d1a16; padding: 16px 12px 12px; transform: rotate(var(--r, 0deg)); box-shadow: 2px 4px 8px rgba(0,0,0,.35); cursor: pointer; display: grid; gap: 4px; }
+.board-card::before { content: ''; position: absolute; top: -8px; left: 50%; width: 15px; height: 15px; margin-left: -7px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff8a80, #ff2e3c 55%, #5a0d08); box-shadow: 1px 3px 3px rgba(0,0,0,.45); }
+.board-card small { font-family: 'Special Elite', monospace; font-size: 11px; color: #c0271d; }
+.board-card b { font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 16px; line-height: 1.2; }
+.board-x { position: absolute; top: 2px; right: 4px; border: 0; background: none; color: #8a7d68; font-size: 14px; padding: 4px; }

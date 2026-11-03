@@ -51,6 +51,25 @@ export const carnet = {
   },
 };
 
+// ───────────────────────── Tableau d'enquête ─────────────────────────
+// Les affaires que l'on épingle soi-même, reliées par un fil rouge sur la carte.
+
+const pins = read('fediv.board', []); // [{id, title, category, date, lat, lon}]
+
+export const board = {
+  get pins() { return pins; },
+  has(id) { return pins.some(p => p.id === id); },
+  toggle(f) {
+    const i = pins.findIndex(p => p.id === f.id);
+    if (i >= 0) pins.splice(i, 1);
+    else pins.push({ id: f.id, title: f.title, category: f.category, date: f.date, lat: f.lat, lon: f.lon });
+    write('fediv.board', pins);
+    return i < 0;
+  },
+  remove(id) { const i = pins.findIndex(p => p.id === id); if (i >= 0) { pins.splice(i, 1); write('fediv.board', pins); } },
+  clear() { pins.length = 0; write('fediv.board', pins); },
+};
+
 // ───────────────────────── Sons ─────────────────────────
 // Banque de sons « bureau du détective », synthétisée à la volée (aucun fichier à télécharger) :
 // machine à écrire (touches, frappe, retour chariot, sonnette), feuille, tiroir de classeur, tampon.

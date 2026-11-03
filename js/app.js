@@ -1,13 +1,13 @@
 // Fediv — web app. Carte des faits divers de France, racontés comme dans un vieux journal.
 
-import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=13';
+import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=22';
 import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=13';
-import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=17';
+} from './sources.js?v=22';
+import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=22';
 
-const APP_VERSION = 'version 1.6';
+const APP_VERSION = 'version 1.7';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -72,6 +72,12 @@ const isVisible = f => eraContains(state.era, f.year)
   && (state.playYear == null || (f.year > 0 && f.year <= state.playYear))
   && (!state.hidden.has(f.rubric) || (f.curated && !state.hidden.has('history')));
 const visibleFacts = () => [...state.facts.values()].filter(isVisible);
+let visibleCache = [];
+
+/** Le point de carte d'un récit, créé une seule fois. */
+const featureOf = f => (f._ft ??= {
+  type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] }, properties: { id: f.id, r: f.rubric, a: f.approx },
+});
 
 // ───────────────────────── Thème ─────────────────────────
 
@@ -206,39 +212,38 @@ function refresh() {
   refreshQueued = true;
   requestAnimationFrame(() => {
     refreshQueued = false;
+    visibleCache = visibleFacts();
+    const features = visibleCache.map(featureOf);
     const heat = state.heat && map.getSource?.('heat');
     if (heat) {
-      const list = visibleFacts();
-      heat.setData({ type: 'FeatureCollection', features: list.map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) });
+      heat.setData({ type: 'FeatureCollection', features });
       // Plus il y a de récits, plus chacun pèse peu : la carte reste lisible de 500 à 50 000 points.
-      map.setPaintProperty('heat', 'heatmap-weight', Math.min(0.8, Math.max(0.025, 600 / Math.max(list.length, 1))));
+      map.setPaintProperty('heat', 'heatmap-weight', Math.min(0.8, Math.max(0.025, 600 / Math.max(features.length, 1))));
     }
-    const source = map.getSource?.('facts');
-    if (source) {
-      source.setData({
-        type: 'FeatureCollection',
-        features: visibleFacts().map(f => ({
-          type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] }, properties: { id: f.id, r: f.rubric, a: f.approx },
-        })),
-      });
-    }
-    renderChronicle();
-    renderRubricBar();
+    map.getSource?.('facts')?.setData({ type: 'FeatureCollection', features });
+    if (state.playYear == null) renderChronicle();
+    updateRubricBar();
   });
 }
 
 // ───────────────────────── Filtres ─────────────────────────
 
 function renderRubricBar() {
-  const bar = $('#rubricBar');
-  const chips = [];
-  if (state.hidden.size) chips.push('<button class="chip reset" data-rubric="*">↺ Tout</button>');
-  for (const r of RUBRICS) {
-    const off = state.hidden.has(r.id);
-    const loading = !off && ARIA_RUBRICS.includes(r.id) && state.aria === 'loading';
-    chips.push(`<button class="chip ${off ? 'off' : ''} ${loading ? 'loading' : ''}" data-rubric="${r.id}" style="--chip:${r.color}" aria-pressed="${!off}">${r.icon} ${r.label}</button>`);
+  $('#rubricBar').innerHTML = `<button class="chip reset" data-rubric="*">↺ Tout</button>`
+    + RUBRICS.map(r => `<button class="chip" data-rubric="${r.id}" style="--chip:${r.color}">${r.icon} ${r.label}</button>`).join('');
+  updateRubricBar();
+}
+
+/** Met à jour l'état des étiquettes sans les reconstruire (pas de saut ni de défilement perdu). */
+function updateRubricBar() {
+  for (const chip of $('#rubricBar').children) {
+    const id = chip.dataset.rubric;
+    if (id === '*') { chip.hidden = state.hidden.size === 0; continue; }
+    const off = state.hidden.has(id);
+    chip.classList.toggle('off', off);
+    chip.classList.toggle('loading', !off && ARIA_RUBRICS.includes(id) && state.aria === 'loading');
+    chip.setAttribute('aria-pressed', String(!off));
   }
-  bar.innerHTML = chips.join('');
 }
 
 $('#rubricBar').addEventListener('click', e => {
@@ -272,7 +277,7 @@ function ensureSourcesForFilters() {
     setStatus();
     loadARIA().then(list => { state.aria = 'done'; addFacts(list); toast(`${fmt(list.length)} accidents industriels ajoutés (base ARIA)`); })
       .catch(() => { state.aria = 'idle'; toast('La base ARIA n’a pas pu être chargée.'); })
-      .finally(() => { setStatus(); renderRubricBar(); });
+      .finally(() => { setStatus(); updateRubricBar(); });
   }
   maybeLoadCatNat();
 }
@@ -308,22 +313,27 @@ chronicle.querySelector('.chronicle-head').addEventListener('click', () => {
   if (window.innerWidth < 900) chronicle.classList.toggle('open');
 });
 
+let lastChronicle = '';
 function renderChronicle() {
   if (!mapReady) return;
   const bounds = map.getBounds();
   const c = map.getCenter();
-  const inView = visibleFacts().filter(f => bounds.contains([f.lon, f.lat]));
-  inView.forEach(f => { f._d = distance(c.lat, c.lng, f.lat, f.lon); });
+  const inView = visibleCache.filter(f => bounds.contains([f.lon, f.lat]));
+  for (const f of inView) f._d = distance(c.lat, c.lng, f.lat, f.lon);
   inView.sort((a, b) => a._d - b._d);
-  const list = inView.slice(0, 150);
+  const list = inView.slice(0, 80);
   $('#chronicleTitle').textContent = inView.length
     ? `${fmt(inView.length)} récit${inView.length > 1 ? 's' : ''} sur la carte`
     : 'Rien dans ce coin';
-  $('#clippings').innerHTML = list.length
-    ? list.map(f => `<li class="clipping" data-id="${esc(f.id)}" style="--tint:${RUBRIC_BY_ID[f.rubric].color}">
-        <div class="meta"><span>${RUBRIC_BY_ID[f.rubric].icon} ${esc(f.category)} · ${esc(f.date)}</span><span>${distanceLabel(f._d)}</span></div>
-        <h3>${esc(f.title)}</h3></li>`).join('')
-    : `<li class="empty">${state.hidden.size === RUBRICS.length ? 'Toutes les rubriques sont masquées.' : 'Aucun récit de ces rubriques ici. Coche d’autres rubriques en haut, change d’époque ou déplace la carte.'}</li>`;
+  const key = list.map(f => f.id + Math.round(f._d / 50)).join('|') + state.hidden.size;
+  if (key !== lastChronicle) {
+    lastChronicle = key;
+    $('#clippings').innerHTML = list.length
+      ? list.map(f => `<li class="clipping" data-id="${esc(f.id)}" style="--tint:${RUBRIC_BY_ID[f.rubric].color}">
+          <div class="meta"><span>${RUBRIC_BY_ID[f.rubric].icon} ${esc(f.category)} · ${esc(f.date)}</span><span>${distanceLabel(f._d)}</span></div>
+          <h3>${esc(f.title)}</h3></li>`).join('')
+      : `<li class="empty">${state.hidden.size === RUBRICS.length ? 'Toutes les rubriques sont masquées.' : 'Aucun récit de ces rubriques ici. Coche d’autres rubriques en haut, change d’époque ou déplace la carte.'}</li>`;
+  }
   setStatus();
 }
 
@@ -332,7 +342,7 @@ $('#clippings').addEventListener('click', e => {
   const f = item && state.facts.get(item.dataset.id);
   if (!f) return;
   if (window.innerWidth < 900) chronicle.classList.remove('open');
-  map.easeTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 15) });
+  map.easeTo({ center: [f.lon, f.lat], zoom: Math.max(map.getZoom(), 15), duration: 700, easing: t => 1 - Math.pow(1 - t, 3) });
   showTeaser(f);
 });
 
@@ -380,6 +390,7 @@ function openSheet(html, onClose, view = '') {
 }
 function closeSheet() {
   closeTimeMaps();
+  stopSpeaking();
   sheet.hidden = true;
   sheetInner.innerHTML = '';
   sheetOnClose?.();
@@ -424,6 +435,8 @@ async function openArticle(f) {
       <a class="btn primary" href="${esc(f.sourceURL)}" target="_blank" rel="noopener">📖 Lire la source</a>
       <a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${f.lat},${f.lon}" target="_blank" rel="noopener">🧭 Y aller</a>
       <button class="btn" data-time>🕰 Remonter le temps</button>
+      <button class="btn" data-speak>🔊 Écouter</button>
+      <button class="btn" data-pin>${board.has(f.id) ? '📌 Épinglée au tableau' : '📌 Épingler au tableau'}</button>
       <button class="btn" data-share>↗ Partager le lien</button>
       <button class="btn" data-card>🗂 Partager la fiche</button>
     </div>
@@ -434,6 +447,14 @@ async function openArticle(f) {
     el.onclick = () => { const g = state.facts.get(el.dataset.near); if (g) { ensureVisible(g); map.jumpTo({ center: [g.lon, g.lat], zoom: Math.max(map.getZoom(), 15) }); openArticle(g); } };
   });
   sheetInner.querySelector('[data-card]').onclick = () => shareCard(f);
+  sheetInner.querySelector('[data-speak]').onclick = e => speakArticle(f, e.currentTarget);
+  sheetInner.querySelector('[data-pin]').onclick = e => {
+    const added = board.toggle(f);
+    e.currentTarget.textContent = added ? '📌 Épinglée au tableau' : '📌 Épingler au tableau';
+    playSound(added ? 'stamp' : 'key');
+    toast(added ? `Épinglée au tableau d'enquête (${board.pins.length})` : 'Retirée du tableau');
+    if (state.boardShown) showBoardOnMap();
+  };
   if (isNew) { playSound('stamp'); toast(onSite ? 'Tampon « sur place » ajouté au carnet !' : 'Récit tamponné dans ton carnet'); }
   sheetInner.querySelector('[data-time]').onclick = () => openTimeMachine(f);
   sheetInner.querySelector('[data-share]').onclick = () => shareFact(f);
@@ -478,6 +499,99 @@ async function shareFact(f) {
     if (navigator.share) await navigator.share(data);
     else { await navigator.clipboard.writeText(url); toast('Lien copié !'); }
   } catch { /* partage annulé */ }
+}
+
+// ───────────────────────── Écouter l'article ─────────────────────────
+
+function stopSpeaking() { try { speechSynthesis.cancel(); } catch { /* pas de synthèse */ } }
+
+/** Lit l'article à voix haute avec une voix française de l'appareil. */
+function speakArticle(f, button) {
+  if (!('speechSynthesis' in window)) { toast('La lecture à voix haute n’est pas disponible ici.'); return; }
+  if (speechSynthesis.speaking) { stopSpeaking(); button.textContent = '🔊 Écouter'; return; }
+  const body = $('#articleBody')?.innerText ?? f.summary ?? '';
+  const u = new SpeechSynthesisUtterance(`${f.title}. ${f.date}. ${f.place.replace(/·.*$/, '')}. ${body}`);
+  u.lang = 'fr-FR';
+  const voices = speechSynthesis.getVoices().filter(v => v.lang?.startsWith('fr'));
+  u.voice = voices.find(v => /Thomas|Daniel|Henri|Paul/i.test(v.name)) ?? voices.find(v => v.lang === 'fr-FR') ?? voices[0] ?? null;
+  u.rate = 0.98;
+  u.onend = u.onerror = () => { if (button.isConnected) button.textContent = '🔊 Écouter'; };
+  button.textContent = '⏹ Arrêter la lecture';
+  playSound('key');
+  speechSynthesis.speak(u);
+}
+
+// ───────────────────────── Tableau d'enquête ─────────────────────────
+
+function openBoard() {
+  const pins = board.pins;
+  openSheet(`${topBar("📌 Mon tableau d'enquête")}
+    <h2 class="headline" style="font-size:32px">Mon tableau d'enquête</h2>
+    <p class="subhead">${pins.length ? `${pins.length} affaire${pins.length > 1 ? 's' : ''} épinglée${pins.length > 1 ? 's' : ''}, reliée${pins.length > 1 ? 's' : ''} par le fil rouge dans l'ordre où tu les as ajoutées.` : 'Ouvre une affaire et touche « 📌 Épingler au tableau » pour commencer ton enquête.'}</p>
+    ${pins.length ? `<div class="board">${pins.map((p, i) => `
+      <div class="board-card" data-id="${esc(p.id)}" style="--r:${((i * 37) % 7) - 3}deg">
+        <button class="board-x" data-remove="${esc(p.id)}" aria-label="Retirer">✕</button>
+        <small>${i + 1} · ${esc(p.category)} · ${esc(p.date)}</small>
+        <b>${esc(p.title)}</b>
+      </div>`).join('')}</div>
+      <div class="actions"><button class="btn primary" data-show>🧵 Voir le fil rouge sur la carte</button><button class="btn" data-clear>Vider le tableau</button></div>` : ''}`);
+  sheetInner.querySelectorAll('.board-card').forEach(el => {
+    el.onclick = e => {
+      if (e.target.closest('[data-remove]')) return;
+      const f = state.facts.get(el.dataset.id);
+      if (f) { ensureVisible(f); map.jumpTo({ center: [f.lon, f.lat], zoom: 15 }); openArticle(f); } else toast('Ce récit n’est pas encore rechargé : coche sa rubrique.');
+    };
+  });
+  sheetInner.querySelectorAll('[data-remove]').forEach(b => { b.onclick = () => { board.remove(b.dataset.remove); playSound('key'); openBoard(); if (state.boardShown) showBoardOnMap(); }; });
+  sheetInner.querySelector('[data-show]')?.addEventListener('click', () => { closeSheet(); showBoardOnMap(true); });
+  sheetInner.querySelector('[data-clear]')?.addEventListener('click', () => { board.clear(); hideBoardOnMap(); openBoard(); });
+}
+
+function showBoardOnMap(fit = false) {
+  const pins = board.pins;
+  if (!mapReady || !pins.length) { hideBoardOnMap(); return; }
+  state.boardShown = true;
+  if (!map.getSource('board')) {
+    map.addSource('board', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({ id: 'board-line', type: 'line', source: 'board', filter: ['==', ['geometry-type'], 'LineString'],
+      layout: { 'line-cap': 'round', 'line-join': 'round' },
+      paint: { 'line-color': '#d0261c', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2, 15, 4], 'line-opacity': 0.9 } });
+    map.addLayer({ id: 'board-pins', type: 'circle', source: 'board', filter: ['==', ['geometry-type'], 'Point'],
+      paint: { 'circle-radius': 9, 'circle-color': '#ff2e3c', 'circle-stroke-width': 3, 'circle-stroke-color': '#fffdf6' } });
+    map.on('click', 'board-pins', e => { const f = state.facts.get(e.features[0].properties.id); if (f) showTeaser(f); });
+  }
+  // Le fil pend un peu entre deux punaises, comme sur un vrai tableau.
+  const line = [];
+  for (let i = 0; i < pins.length; i++) {
+    const a = pins[i], b = pins[i + 1];
+    line.push([a.lon, a.lat]);
+    if (!b) break;
+    for (let k = 1; k < 8; k++) {
+      const t = k / 8;
+      const sag = Math.sin(Math.PI * t) * Math.hypot(b.lon - a.lon, b.lat - a.lat) * 0.08;
+      line.push([a.lon + (b.lon - a.lon) * t, a.lat + (b.lat - a.lat) * t - sag]);
+    }
+  }
+  map.getSource('board').setData({ type: 'FeatureCollection', features: [
+    ...(pins.length > 1 ? [{ type: 'Feature', geometry: { type: 'LineString', coordinates: line } }] : []),
+    ...pins.map(p => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: { id: p.id } })),
+  ] });
+  if (fit) {
+    const b = new maplibregl.LngLatBounds();
+    pins.forEach(p => b.extend([p.lon, p.lat]));
+    map.fitBounds(b, { padding: { top: 190, bottom: window.innerWidth < 900 ? 220 : 60, left: window.innerWidth < 900 ? 50 : 420, right: 70 }, maxZoom: 15, duration: 900 });
+    const banner = $('#circuitBanner');
+    banner.innerHTML = `<span style="font-size:22px">🧵</span><div class="grow"><b>Mon tableau d'enquête</b><br>${pins.length} affaire${pins.length > 1 ? 's' : ''} reliée${pins.length > 1 ? 's' : ''}</div><button class="close-btn" data-quit aria-label="Masquer le fil rouge">✕</button>`;
+    banner.hidden = false;
+    banner.querySelector('[data-quit]').onclick = hideBoardOnMap;
+    playSound('carriage');
+  }
+}
+
+function hideBoardOnMap() {
+  state.boardShown = false;
+  map.getSource('board')?.setData({ type: 'FeatureCollection', features: [] });
+  if (!state.circuit) $('#circuitBanner').hidden = true;
 }
 
 // ───────────────────────── Fiche à partager (image) ─────────────────────────
@@ -665,7 +779,9 @@ function openUne() {
   const monthRe = new RegExp(` ${month} \\d{3,4}$`);
   const c = map.getCenter();
   const all = [...state.facts.values()].filter(f => f.year > 0);
-  const byNear = list => list.sort((a, b) => distance(c.lat, c.lng, a.lat, a.lon) - distance(c.lat, c.lng, b.lat, b.lon));
+  // Les récits titrés « Crime · date » (anonymisés) passent après les grandes affaires.
+  const rank = f => (f.curated ? 0 : f.title.includes(' · ') ? 2 : 1);
+  const byNear = list => list.sort((a, b) => rank(a) - rank(b) || distance(c.lat, c.lng, a.lat, a.lon) - distance(c.lat, c.lng, b.lat, b.lon));
   let items = byNear(all.filter(f => dayRe.test(f.date)));
   const sameDay = items.length;
   if (items.length < 5) items = items.concat(byNear(all.filter(f => monthRe.test(f.date) && !dayRe.test(f.date))).slice(0, 7 - items.length));
@@ -946,8 +1062,11 @@ $('#randomBtn').addEventListener('click', () => {
   const f = pool[Math.floor(Math.random() * pool.length)];
   ensureVisible(f);
   playSound('carriage');
+  let shown = false;
+  const show = () => { if (!shown) { shown = true; showTeaser(f); } };
   map.flyTo({ center: [f.lon, f.lat], zoom: 14.5, speed: 1.6 });
-  map.once('moveend', () => showTeaser(f));
+  map.once('moveend', show);
+  setTimeout(show, 3500);
 });
 
 // ───────────────────────── Carte de chaleur ─────────────────────────
@@ -997,14 +1116,14 @@ function startReplay() {
     state.playYear = Math.min(to, state.playYear + (state.playYear < 1900 ? 3 : 2));
     $('#replayYear').textContent = state.playYear;
     $('#replayProgress').style.width = `${((state.playYear - from) / (to - from)) * 100}%`;
-    const n = visibleFacts().length;
+    const n = [...state.facts.values()].reduce((k, f) => k + (isVisible(f) ? 1 : 0), 0);
     $('#replayCount').textContent = `${fmt(n)} récit${n > 1 ? 's' : ''}`;
     refresh();
     if (state.playYear % 10 === 0 || state.playYear % 10 === 1) playSound('key');
     if (state.playYear >= to) { playSound('ding'); stopReplay(true); }
   };
   $('#replayYear').textContent = from;
-  replayTimer = setInterval(step, 220);
+  replayTimer = setInterval(step, 280);
 }
 function stopReplay(keepCard) {
   clearInterval(replayTimer);
@@ -1027,7 +1146,7 @@ $('#menu').addEventListener('click', e => {
   const b = e.target.closest('[data-open]');
   if (!b) return;
   closeMenu();
-  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy })[b.dataset.open]();
+  ({ une: openUne, circuits: openCircuits, carnet: openCarnet, quiz: () => openQuiz(), barometer: openBarometer, walk: toggleWalk, about: openAbout, privacy: openPrivacy, board: openBoard })[b.dataset.open]();
 });
 
 // ───────────────────────── Recherche ─────────────────────────
