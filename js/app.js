@@ -211,7 +211,7 @@ function refresh() {
       const list = visibleFacts();
       heat.setData({ type: 'FeatureCollection', features: list.map(f => ({ type: 'Feature', geometry: { type: 'Point', coordinates: [f.lon, f.lat] } })) });
       // Plus il y a de récits, plus chacun pèse peu : la carte reste lisible de 500 à 50 000 points.
-      map.setPaintProperty('heat', 'heatmap-weight', Math.min(0.8, Math.max(0.012, 300 / Math.max(list.length, 1))));
+      map.setPaintProperty('heat', 'heatmap-weight', Math.min(0.8, Math.max(0.025, 600 / Math.max(list.length, 1))));
     }
     const source = map.getSource?.('facts');
     if (source) {
