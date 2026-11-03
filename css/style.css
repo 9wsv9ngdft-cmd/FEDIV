@@ -423,22 +423,24 @@ a { color: var(--red); }
 /* ═════════════ Finitions « pro » ═════════════ */
 
 /* Écran d'ouverture */
+/* Tant que les polices ne sont pas prêtes, l'animation attend (pas de saut de police en cours de route). */
+.splash:not(.go) *, .splash:not(.go) { animation-play-state: paused !important; }
 .splash { position: fixed; inset: 0; z-index: 100; overflow: hidden; display: grid; place-items: center; cursor: pointer;
   background: radial-gradient(ellipse at 50% 120%, #0d1a33, #05080f 70%); color: #fff; }
 .splash-lights { position: absolute; inset: 0; pointer-events: none; }
 .splash-lights span { position: absolute; top: -20%; width: 90vmax; height: 90vmax; border-radius: 50%; filter: blur(40px); opacity: 0; }
-.splash-lights .b { left: -45vmax; background: radial-gradient(circle, rgba(47,139,255,.85), rgba(47,139,255,0) 62%); animation: gyro-b .9s steps(1) infinite, lights-in .5s ease-out forwards; }
-.splash-lights .r { right: -45vmax; background: radial-gradient(circle, rgba(255,46,76,.8), rgba(255,46,76,0) 62%); animation: gyro-r .9s steps(1) infinite, lights-in .5s ease-out forwards; }
-@keyframes lights-in { to { opacity: .9; } }
-@keyframes gyro-b { 0% { filter: blur(40px) brightness(1.4); } 50% { filter: blur(40px) brightness(.35); } }
-@keyframes gyro-r { 0% { filter: blur(40px) brightness(.35); } 50% { filter: blur(40px) brightness(1.4); } }
+.splash-lights .b { left: -45vmax; background: radial-gradient(circle, rgba(47,139,255,.85), rgba(47,139,255,0) 62%); animation: gyro-b 1.8s ease-in-out infinite, lights-in 1.1s .1s ease-out forwards; }
+.splash-lights .r { right: -45vmax; background: radial-gradient(circle, rgba(255,46,76,.8), rgba(255,46,76,0) 62%); animation: gyro-r 1.8s ease-in-out infinite, lights-in 1.1s .1s ease-out forwards; }
+@keyframes lights-in { to { opacity: .85; } }
+@keyframes gyro-b { 0%, 100% { filter: blur(40px) brightness(1.25); } 50% { filter: blur(40px) brightness(.45); } }
+@keyframes gyro-r { 0%, 100% { filter: blur(40px) brightness(.45); } 50% { filter: blur(40px) brightness(1.25); } }
 
 .splash-tape { position: absolute; left: -15%; right: -15%; height: 46px; background: #f5c518; color: #111; overflow: hidden; white-space: nowrap;
   font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 18px; letter-spacing: 3px; line-height: 46px;
   box-shadow: 0 8px 24px rgba(0,0,0,.55); border-top: 2px solid rgba(0,0,0,.25); border-bottom: 2px solid rgba(0,0,0,.25); }
 .splash-tape span { display: inline-block; padding-left: 20px; animation: tape-run 9s linear infinite; }
-.splash-tape.t1 { top: 17%; transform: translateX(-120%) rotate(-9deg); animation: tape-in-1 .55s .15s cubic-bezier(.2,.9,.25,1.05) forwards; }
-.splash-tape.t2 { bottom: 17%; transform: translateX(120%) rotate(7deg); animation: tape-in-2 .55s .32s cubic-bezier(.2,.9,.25,1.05) forwards; }
+.splash-tape.t1 { top: 17%; transform: translateX(-120%) rotate(-9deg); animation: tape-in-1 1s .25s cubic-bezier(.16,1,.3,1) forwards; }
+.splash-tape.t2 { bottom: 17%; transform: translateX(120%) rotate(7deg); animation: tape-in-2 1s .4s cubic-bezier(.16,1,.3,1) forwards; }
 .splash-tape.t2 span { animation-direction: reverse; }
 @keyframes tape-in-1 { to { transform: translateX(0) rotate(-9deg); } }
 @keyframes tape-in-2 { to { transform: translateX(0) rotate(7deg); } }
@@ -446,10 +448,10 @@ a { color: var(--red); }
 
 .splash-core { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .splash-icon { width: 104px; height: 104px; border-radius: 24px; box-shadow: 0 14px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.08);
-  opacity: 0; transform: translateY(-80px) scale(.6); animation: pin-drop .7s .55s cubic-bezier(.3,1.6,.5,1) forwards; }
-@keyframes pin-drop { 60% { opacity: 1; transform: translateY(6px) scale(1.04); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  opacity: 0; transform: translateY(-36px) scale(.86); animation: pin-drop .9s .6s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes pin-drop { 70% { opacity: 1; transform: translateY(3px) scale(1.01); } to { opacity: 1; transform: translateY(0) scale(1); } }
 .splash-name { display: flex; gap: 10px; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 700; font-size: 40px; text-shadow: 0 0 18px rgba(47,139,255,.75); }
-.splash-name span { opacity: 0; transform: translateY(4px) scale(1.4); animation: type-key .14s ease-out forwards; }
+.splash-name span { opacity: 0; transform: translateY(8px); animation: type-key .35s cubic-bezier(.22,1,.36,1) forwards; }
 .splash-name span:nth-child(1) { animation-delay: 1.05s; }
 .splash-name span:nth-child(2) { animation-delay: 1.15s; }
 .splash-name span:nth-child(3) { animation-delay: 1.25s; }
@@ -457,18 +459,19 @@ a { color: var(--red); }
 .splash-name span:nth-child(5) { animation-delay: 1.45s; }
 @keyframes type-key { to { opacity: 1; transform: none; } }
 .splash-gyro { width: 0; height: 4px; border-radius: 2px; background: linear-gradient(90deg, #2f8bff 0 50%, #ff2e3c 50% 100%); box-shadow: 0 0 14px #2f8bff;
-  animation: gyro-grow .4s 1.6s ease-out forwards, gyro-mix 1.1s 2s steps(1) infinite; }
+  animation: gyro-grow .6s 1.6s cubic-bezier(.22,1,.36,1) forwards; }
 @keyframes gyro-grow { to { width: 140px; } }
-.splash-text { margin: 0; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; color: #c9d6ee; letter-spacing: 1px; opacity: 0; animation: lights-in .5s 1.75s forwards; }
+.splash-text { margin: 0; font-family: 'Special Elite', 'Courier New', monospace; font-size: 14px; color: #c9d6ee; letter-spacing: 1px; opacity: 0; transform: translateY(6px); animation: text-in .7s 1.8s cubic-bezier(.22,1,.36,1) forwards; }
+@keyframes text-in { to { opacity: 1; transform: none; } }
 
 /* Sortie : les rubans s'écartent, le dossier s'ouvre sur la carte */
-.splash.gone { pointer-events: none; animation: splash-out .6s .1s ease-in forwards; }
-.splash.gone .splash-tape.t1 { animation: tape-out-1 .5s ease-in forwards; transform: translateX(0) rotate(-9deg); }
-.splash.gone .splash-tape.t2 { animation: tape-out-2 .5s ease-in forwards; transform: translateX(0) rotate(7deg); }
-.splash.gone .splash-core { animation: core-out .5s ease-in forwards; }
+.splash.gone { pointer-events: none; animation: splash-out .8s .15s cubic-bezier(.4,0,.2,1) forwards; }
+.splash.gone .splash-tape.t1 { animation: tape-out-1 .75s cubic-bezier(.5,0,.75,0) forwards; transform: translateX(0) rotate(-9deg); }
+.splash.gone .splash-tape.t2 { animation: tape-out-2 .75s cubic-bezier(.5,0,.75,0) forwards; transform: translateX(0) rotate(7deg); }
+.splash.gone .splash-core { animation: core-out .7s cubic-bezier(.4,0,.2,1) forwards; }
 @keyframes tape-out-1 { to { transform: translateX(-130%) rotate(-14deg); } }
 @keyframes tape-out-2 { to { transform: translateX(130%) rotate(12deg); } }
-@keyframes core-out { to { opacity: 0; transform: scale(1.12); } }
+@keyframes core-out { to { opacity: 0; transform: scale(1.06); } }
 @keyframes splash-out { to { opacity: 0; visibility: hidden; } }
 
 /* Ouvertures suivantes : version express */

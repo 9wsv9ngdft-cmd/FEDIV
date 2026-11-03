@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Fediv — les faits divers autour de vous</title>
   <meta name="description" content="Fediv : une carte des faits divers, crimes, accidents et grandes affaires de France, racontés comme dans un vieux journal.">
-  <meta name="theme-color" content="#d6bf93">
+  <meta name="theme-color" content="#05080f">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -33,7 +33,7 @@
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://data.geopf.fr">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link href="css/style.css?v=24" rel="stylesheet">
+  <link href="css/style.css?v=25" rel="stylesheet">
 </head>
 <body>
   <!-- Écran d'ouverture : gyrophare, rubalises, épingle, nom tapé à la machine -->
@@ -48,6 +48,15 @@
       <p class="splash-text">Les faits divers autour de vous</p>
     </div>
   </div>
+  <script>
+    // L'animation démarre dès que les polices sont prêtes (au plus tard après 700 ms), sans attendre le reste.
+    (function () {
+      var s = document.getElementById('splash');
+      var go = function () { if (s) s.classList.add('go'); };
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(go);
+      setTimeout(go, 700);
+    })();
+  </script>
 
   <div id="map" role="application" aria-label="Carte des faits divers"></div>
 
@@ -146,6 +155,6 @@
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=33"></script>
+  <script type="module" src="js/app.js?v=35"></script>
 </body>
 </html>

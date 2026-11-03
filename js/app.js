@@ -8,7 +8,7 @@ import {
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
 import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=32';
 
-const APP_VERSION = 'version 1.11';
+const APP_VERSION = 'version 1.12';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -1355,8 +1355,9 @@ const splashEl = $('#splash');
 const splashQuick = (() => { try { return sessionStorage.getItem('fediv.opened') === '1'; } catch { return false; } })();
 if (splashQuick) splashEl?.classList.add('quick');
 try { sessionStorage.setItem('fediv.opened', '1'); } catch { /* navigation privée */ }
-const splashMin = splashQuick ? 450 : 2300;
-const splashStart = performance.now();
+// Durée mesurée depuis l'ouverture de la page (l'animation est lancée par un petit script dans index.html).
+const splashMin = splashQuick ? 450 : 2900;
+const splashStart = 0;
 let splashReady = false;
 
 function hideSplash(force = false) {
@@ -1365,10 +1366,10 @@ function hideSplash(force = false) {
   const wait = splashMin - (performance.now() - splashStart);
   if (!force && wait > 0) { setTimeout(() => hideSplash(), wait); return; }
   el.classList.add('gone');
-  setTimeout(() => el.remove(), 900);
+  setTimeout(() => el.remove(), 1100);
 }
 splashEl?.addEventListener('click', () => hideSplash(true)); // un toucher pour passer
-setTimeout(() => hideSplash(true), 6000); // au pire, on n'attend pas plus
+setTimeout(() => hideSplash(true), 7000); // au pire, on n'attend pas plus
 
 function updateOnline() { $('#offlineBanner').hidden = navigator.onLine; }
 window.addEventListener('online', updateOnline);
