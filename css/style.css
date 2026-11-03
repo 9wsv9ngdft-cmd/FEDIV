@@ -181,14 +181,18 @@ a { color: var(--red); }
 /* Remonter le temps */
 .time-tabs { display: flex; gap: 6px; margin: 10px 0; flex-wrap: wrap; }
 .time-tabs .chip.on { background: var(--ink); color: var(--cream); border-color: var(--ink); }
-.compare { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border: 1px solid var(--ink); background: #ccc; touch-action: none; user-select: none; }
-.compare .mosaic { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
-.compare .mosaic img { width: 100%; height: 100%; display: block; }
-.compare .top { clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0); }
-.compare .handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 3px; background: #fff; box-shadow: 0 0 6px rgba(0, 0, 0, 0.6); transform: translateX(-1px); }
-.compare .handle::after { content: '⇆'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 40px; height: 40px; border-radius: 50%; background: #fff; color: #222; display: grid; place-items: center; font-size: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
-.compare .label { position: absolute; bottom: 8px; background: rgba(0, 0, 0, 0.65); color: #fff; font-family: var(--type); font-size: 12px; padding: 3px 8px; }
-.compare .marker { position: absolute; left: var(--mx); top: var(--my); width: 18px; height: 18px; margin: -9px; border-radius: 50%; border: 3px solid #fff; background: var(--red); box-shadow: 0 0 0 2px rgba(0,0,0,.4); }
+.compare { position: relative; width: 100%; height: min(68vh, 560px); overflow: hidden; border: 1px solid var(--ink); background: #d9cfb8; touch-action: none; user-select: none; }
+.compare .time-map { position: absolute; inset: 0; }
+.compare .time-map.top { clip-path: inset(0 calc(100% - var(--split, 50%)) 0 0); }
+.compare .handle { position: absolute; top: 0; bottom: 0; left: var(--split, 50%); width: 44px; margin-left: -22px; z-index: 3; cursor: ew-resize; touch-action: none; }
+.compare .handle::before { content: ''; position: absolute; top: 0; bottom: 0; left: 20px; width: 4px; background: #fff; box-shadow: 0 0 6px rgba(0, 0, 0, 0.6); }
+.compare .handle::after { content: '⇆'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 42px; height: 42px; border-radius: 50%; background: #fff; color: #222; display: grid; place-items: center; font-size: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+.compare .label { position: absolute; z-index: 2; bottom: 8px; background: rgba(0, 0, 0, 0.7); color: #fff; font-family: var(--type); font-size: 12px; padding: 3px 8px; pointer-events: none; }
+.time-pin { width: 20px; height: 20px; border-radius: 50%; border: 3px solid #fff; background: #c0271d; box-shadow: 0 0 0 2px rgba(0,0,0,.45), 0 0 12px rgba(192,39,29,.6); }
+.time-tabs .chip { color: var(--ink); }
+.time-tabs .chip.on, [data-style] .time-tabs .chip.on { background: var(--ink); border-color: var(--ink); color: var(--tape, #f5c518); }
+[data-style='nuit'] .time-tabs .chip { background: #fffdf6; color: #1d1a16; border-color: #a8895a; }
+[data-style='nuit'] .time-tabs .chip.on { background: #1d1a16; color: #f5c518; }
 
 /* Baromètre */
 .baro-table { width: 100%; border-collapse: collapse; font-size: 14px; }

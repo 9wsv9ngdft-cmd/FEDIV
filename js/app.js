@@ -365,6 +365,7 @@ function openSheet(html, onClose, view = '') {
   sheetInner.querySelectorAll('[data-close]').forEach(b => { b.onclick = closeSheet; });
 }
 function closeSheet() {
+  closeTimeMaps();
   sheet.hidden = true;
   sheetInner.innerHTML = '';
   sheetOnClose?.();
@@ -444,59 +445,91 @@ async function shareFact(f) {
 // ───────────────────────── Remonter le temps (IGN) ─────────────────────────
 
 const TIME_LAYERS = {
-  etatMajor: { label: '1850', caption: "Carte d'état-major, levée entre 1820 et 1866", layer: 'GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40', format: 'image/jpeg', zoom: 15 },
-  aerial1950: { label: '1950', caption: 'Photographie aérienne, 1950 – 1965', layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965', format: 'image/png', zoom: 17 },
-  today: { label: "Aujourd'hui", caption: 'Photographie aérienne actuelle', layer: 'ORTHOIMAGERY.ORTHOPHOTOS', format: 'image/jpeg', zoom: 17 },
+  etatMajor: { caption: "Carte d'état-major, levée entre 1820 et 1866", layer: 'GEOGRAPHICALGRIDSYSTEMS.ETATMAJOR40', format: 'image/jpeg', maxzoom: 15 },
+  aerial1950: { caption: 'Photographie aérienne, 1950 – 1965', layer: 'ORTHOIMAGERY.ORTHOPHOTOS.1950-1965', format: 'image/png', maxzoom: 18 },
+  today: { caption: 'Photographie aérienne actuelle', layer: 'ORTHOIMAGERY.ORTHOPHOTOS', format: 'image/jpeg', maxzoom: 19 },
 };
 
-function mosaic(lat, lon, key) {
+/** Petite carte MapLibre sur une couche IGN, centrée sur le récit. */
+function timeMap(container, f, key, interactive = true) {
   const l = TIME_LAYERS[key];
-  const n = 2 ** l.zoom;
-  const xf = (lon + 180) / 360 * n;
-  const r = lat * Math.PI / 180;
-  const yf = (1 - Math.log(Math.tan(r) + 1 / Math.cos(r)) / Math.PI) / 2 * n;
-  const cx = Math.floor(xf), cy = Math.floor(yf);
-  const tiles = [];
-  for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
-    tiles.push(`<img alt="" loading="lazy" src="https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${l.layer}&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX=${l.zoom}&TILEROW=${cy + dy}&TILECOL=${cx + dx}&FORMAT=${encodeURIComponent(l.format)}" onerror="this.style.visibility='hidden'">`);
-  }
-  return { html: tiles.join(''), mx: ((xf - (cx - 1)) / 3) * 100, my: ((yf - (cy - 1)) / 3) * 100 };
+  const tiles = `https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=${l.layer}&STYLE=normal&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}&FORMAT=${encodeURIComponent(l.format)}`;
+  const m = new maplibregl.Map({
+    container,
+    style: {
+      version: 8,
+      sources: { ign: { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: l.maxzoom } },
+      layers: [
+        { id: 'bg', type: 'background', paint: { 'background-color': '#d9cfb8' } },
+        { id: 'ign', type: 'raster', source: 'ign', paint: key === 'today' ? {} : { 'raster-saturation': -0.4 } },
+      ],
+    },
+    center: [f.lon, f.lat],
+    zoom: key === 'etatMajor' ? 14.5 : 16.5,
+    minZoom: 11,
+    maxZoom: 19,
+    attributionControl: false,
+    dragRotate: false,
+    pitchWithRotate: false,
+    interactive,
+  });
+  m.touchZoomRotate?.disableRotation();
+  const pin = document.createElement('div');
+  pin.className = 'time-pin';
+  new maplibregl.Marker({ element: pin }).setLngLat([f.lon, f.lat]).addTo(m);
+  return m;
 }
 
+let timeMaps = [];
+function closeTimeMaps() { timeMaps.forEach(m => m.remove()); timeMaps = []; }
+
 function openTimeMachine(f, mode = 'compare') {
-  const today = mosaic(f.lat, f.lon, 'today');
-  const before = mosaic(f.lat, f.lon, mode === 'compare' ? 'aerial1950' : 'etatMajor');
-  const onlyOld = mode !== 'compare';
+  closeTimeMaps();
+  const compare = mode === 'compare';
   openSheet(`${topBar('🕰 Remonter le temps')}
     <h2 class="headline" style="font-size:30px">${esc(f.title)}</h2>
     <p class="subhead">Le lieu vu par l’IGN, hier et aujourd’hui.</p>
     <div class="time-tabs">
-      <button class="chip ${mode === 'compare' ? 'on' : ''}" data-mode="compare">1950 ⇆ aujourd’hui</button>
-      <button class="chip ${mode === 'etat' ? 'on' : ''}" data-mode="etat">Carte d’état-major (1850)</button>
+      <button class="chip ${compare ? 'on' : ''}" data-mode="compare">1950 ⇆ aujourd’hui</button>
+      <button class="chip ${!compare ? 'on' : ''}" data-mode="etat">Carte d’état-major (1850)</button>
     </div>
-    <div class="compare" id="compare" style="--split:50%;--mx:${today.mx}%;--my:${today.my}%">
-      ${onlyOld
-        ? `<div class="mosaic" style="filter:sepia(.35)">${before.html}</div><span class="label" style="left:8px">${TIME_LAYERS.etatMajor.caption}</span><span class="marker" style="--mx:${before.mx}%;--my:${before.my}%"></span>`
-        : `<div class="mosaic">${today.html}</div>
-           <div class="mosaic top" style="filter:sepia(.45) contrast(1.05)">${before.html}</div>
-           <div class="handle"></div>
-           <span class="label" style="left:8px">1950 – 1965</span><span class="label" style="right:8px">Aujourd’hui</span>
-           <span class="marker"></span>`}
+    <div class="compare" id="compare" style="--split:50%">
+      <div class="time-map" id="timeAfter"></div>
+      ${compare ? `<div class="time-map top" id="timeBefore"></div>
+        <div class="handle" id="timeHandle" aria-label="Faire glisser pour comparer"></div>
+        <span class="label" style="left:8px">1950 – 1965</span><span class="label" style="right:8px">Aujourd’hui</span>`
+        : `<span class="label" style="left:8px">${TIME_LAYERS.etatMajor.caption}</span>`}
     </div>
-    <p class="note">${onlyOld ? '' : 'Fais glisser le rideau pour comparer. '}Images : IGN, Géoplateforme (données ouvertes). Les clichés anciens ne couvrent pas toute la France.</p>
-    <div class="actions"><button class="btn" data-back>← Revenir à l’article</button></div>`);
+    <p class="note">${compare ? 'Fais glisser la poignée pour comparer ; la carte se déplace et se zoome. ' : 'La carte se déplace et se zoome. '}Images : IGN, Géoplateforme (données ouvertes). Les clichés anciens ne couvrent pas toute la France.</p>
+    <div class="actions"><button class="btn" data-back>← Revenir à l’article</button></div>`, closeTimeMaps);
   sheetInner.querySelectorAll('[data-mode]').forEach(b => { b.onclick = () => openTimeMachine(f, b.dataset.mode); });
-  sheetInner.querySelector('[data-back]').onclick = () => openArticle(f);
+  sheetInner.querySelector('[data-back]').onclick = () => { closeTimeMaps(); openArticle(f); };
+
+  const after = timeMap($('#timeAfter'), f, compare ? 'today' : 'etatMajor');
+  timeMaps.push(after);
+  if (!compare) return;
+  const before = timeMap($('#timeBefore'), f, 'aerial1950');
+  timeMaps.push(before);
+  // Les deux cartes bougent ensemble.
+  let syncing = false;
+  const sync = (from, to) => from.on('move', () => {
+    if (syncing) return;
+    syncing = true;
+    to.jumpTo({ center: from.getCenter(), zoom: from.getZoom() });
+    syncing = false;
+  });
+  sync(after, before);
+  sync(before, after);
+
   const box = $('#compare');
-  if (!onlyOld) {
-    const move = e => {
-      const rect = box.getBoundingClientRect();
-      const x = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1);
-      box.style.setProperty('--split', `${x * 100}%`);
-    };
-    box.addEventListener('pointerdown', e => { box.setPointerCapture(e.pointerId); move(e); });
-    box.addEventListener('pointermove', e => { if (e.buttons) move(e); });
-  }
+  const handle = $('#timeHandle');
+  const move = e => {
+    const rect = box.getBoundingClientRect();
+    const x = Math.min(Math.max((e.clientX - rect.left) / rect.width, 0.02), 0.98);
+    box.style.setProperty('--split', `${x * 100}%`);
+  };
+  handle.addEventListener('pointerdown', e => { e.preventDefault(); e.stopPropagation(); handle.setPointerCapture(e.pointerId); move(e); });
+  handle.addEventListener('pointermove', e => { if (handle.hasPointerCapture(e.pointerId)) { e.stopPropagation(); move(e); } });
 }
 
 // ───────────────────────── La Une du jour ─────────────────────────
