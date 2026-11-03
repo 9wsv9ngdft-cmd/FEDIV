@@ -2,13 +2,13 @@
 
 import { RUBRICS, RUBRIC_BY_ID, MAP_COLORS, ERAS, eraContains, ARIA_RUBRICS } from './rubrics.js?v=25';
 import {
-  loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
+  loadLocal, loadHistory, loadOverseas, territoryAt, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
-} from './sources.js?v=25';
+} from './sources.js?v=26';
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
 import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=32';
 
-const APP_VERSION = 'version 1.12';
+const APP_VERSION = 'version 1.13';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -432,7 +432,7 @@ async function openArticle(f) {
       <dt>QUAND</dt><dd>${esc(f.date)}</dd>
       ${d ? `<dt>D'ICI</dt><dd>${d}</dd>` : ''}
       <dt>SOURCE</dt><dd>${esc(f.sourceName)}</dd>
-      ${f.approx ? '<dt>PRÉCISION</dt><dd>Centre du lieu ou de la commune (± 500 m)</dd>' : ''}
+      ${f.approx ? `<dt>PRÉCISION</dt><dd>${esc(f.approxNote || 'Centre du lieu ou de la commune (± 500 m)')}</dd>` : ''}
     </dl>
     <div class="actions">
       <a class="btn primary" href="${esc(f.sourceURL)}" target="_blank" rel="noopener">📖 Lire la source</a>
@@ -1300,6 +1300,7 @@ function openAbout() {
     </div>
     <dl class="fact-sheet">
       <dt>HISTOIRE</dt><dd>580 faits historiques tirés des catégories de Wikipédia, datés et localisés via Wikidata.</dd>
+      <dt>OUTRE-MER</dt><dd>132 événements en Guyane, aux Antilles, à La Réunion, à Mayotte, en Nouvelle-Calédonie, en Polynésie, à Saint-Pierre-et-Miquelon et à Wallis-et-Futuna : émeutes, cyclones, éruptions, séismes, accidents, batailles (Wikipédia et Wikidata). ARIA et CatNat couvrent aussi ces territoires.</dd>
       <dt>WIKIDATA</dt><dd>Accidents, attentats, crimes, incendies, naufrages… géolocalisés, plus ~1 200 affaires placées à leur commune (en direct).</dd>
       <dt>ARIA</dt><dd>46 000 accidents industriels (BARPI, ministère de la Transition écologique), 1966 – 2020.</dd>
       <dt>GÉORISQUES</dt><dd>Arrêtés de catastrophe naturelle (CatNat) autour de la carte.</dd>
@@ -1409,7 +1410,7 @@ if (settings.shake) {
 }
 
 async function start() {
-  const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
+  const base = track('local', Promise.all([loadLocal(), loadHistory(), loadOverseas().catch(() => [])]).then(([a, b, c]) => { addFacts(a); addFacts(b); addFacts(c); }));
   // On n'attend pas la carte (elle se dessine au fur et à mesure) : dès que les récits sont prêts, on ouvre.
   base.then(() => hideSplash());
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
@@ -1431,6 +1432,26 @@ async function start() {
     tryOpen();
   } else if (!settings.welcomed) {
     openWelcome();
+  } else {
+    centerOnMeIfAllowed();
   }
+}
+
+/** Si la position est déjà autorisée, on ouvre directement là où l'on se trouve (métropole ou outre-mer).
+ *  La position reste sur l'appareil : elle ne sert qu'à centrer la carte. */
+async function centerOnMeIfAllowed() {
+  try {
+    if (!navigator.geolocation || !navigator.permissions) return;
+    const status = await navigator.permissions.query({ name: 'geolocation' });
+    if (status.state !== 'granted') return;
+    navigator.geolocation.getCurrentPosition(pos => {
+      if (location.hash.includes('fait=')) return;
+      setMe(pos);
+      const where = territoryAt(state.me.lat, state.me.lon);
+      map.jumpTo({ center: [state.me.lon, state.me.lat], zoom: where ? 10 : 12.5 });
+      $('#locateBtn').classList.add('active');
+      if (where) setTimeout(() => toast(`Dossiers de ${where} ouverts autour de toi.`), 900);
+    }, () => {}, { enableHighAccuracy: false, maximumAge: 600000, timeout: 8000 });
+  } catch {}
 }
 start();

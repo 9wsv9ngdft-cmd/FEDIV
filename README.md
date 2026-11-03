@@ -26,7 +26,8 @@ C'est la version web de l'app iOS Fediv. Elle tourne entièrement dans le naviga
 | Source | Contenu | Mode |
 | --- | --- | --- |
 | Wikipédia et Wikidata | 580 faits historiques | fichier `data/histoire.json` |
-| Wikidata | accidents, attentats, crimes, naufrages… géolocalisés, et environ 1 200 affaires placées à leur commune | en direct (SPARQL) |
+| Wikipédia et Wikidata | 132 événements d’outre-mer (Guyane, Antilles, Réunion, Mayotte, Nouvelle-Calédonie, Polynésie, Saint-Pierre-et-Miquelon, Wallis-et-Futuna) | fichier `data/outremer.json` |
+| Wikidata | accidents, attentats, crimes, naufrages, séismes, cyclones… géolocalisés en métropole et outre-mer, et environ 1 200 affaires placées à leur commune | en direct (SPARQL) |
 | ARIA (BARPI) | 46 000 accidents industriels, 1966-2020 | fichiers `data/aria-index.json` et `data/aria/*.json`, chargés à la demande |
 | Géorisques | arrêtés de catastrophe naturelle | en direct, autour du centre de la carte |
 | SSMSI (data.gouv.fr) | délinquance enregistrée par commune et département | en direct |

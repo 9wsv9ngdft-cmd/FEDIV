@@ -4,8 +4,27 @@
 
 import { family } from './rubrics.js?v=25';
 
-const FRANCE = { minLat: 41.2, maxLat: 51.2, minLon: -5.3, maxLon: 9.7 };
-const inFrance = (lat, lon) => lat > FRANCE.minLat && lat < FRANCE.maxLat && lon > FRANCE.minLon && lon < FRANCE.maxLon;
+// Métropole puis outre-mer : [latMin, latMax, lonMin, lonMax].
+const BOXES = [
+  [41.2, 51.2, -5.3, 9.7],        // métropole et Corse
+  [1.5, 6.5, -55.5, -51],         // Guyane
+  [14, 18.5, -63.5, -60.5],       // Antilles (Guadeloupe, Martinique, Saint-Martin, Saint-Barthélemy)
+  [-21.6, -20.7, 55, 56],         // La Réunion
+  [-13.2, -12.5, 44.9, 45.4],     // Mayotte
+  [-23, -19, 163, 168.5],         // Nouvelle-Calédonie
+  [-28, -7, -155, -134],          // Polynésie française
+  [46.7, 47.2, -56.5, -56],       // Saint-Pierre-et-Miquelon
+  [-14.4, -13.1, -178.3, -176],   // Wallis-et-Futuna
+];
+const inFrance = (lat, lon) => BOXES.some(([a, b, c, d]) => lat > a && lat < b && lon > c && lon < d);
+const TERRITORIES = ['', 'la Guyane', 'les Antilles', 'La Réunion', 'Mayotte', 'la Nouvelle-Calédonie', 'la Polynésie française', 'Saint-Pierre-et-Miquelon', 'Wallis-et-Futuna'];
+/** Nom du territoire ultramarin qui contient ce point (vide en métropole ou ailleurs). */
+export const territoryAt = (lat, lon) => {
+  const i = BOXES.findIndex(([a, b, c, d]) => lat > a && lat < b && lon > c && lon < d);
+  return i > 0 ? TERRITORIES[i] : '';
+};
+const BOX_FILTER = BOXES.map(([a, b, c, d]) =>
+  `(?lat > ${a} && ?lat < ${b} && ?lon > ${c} && ?lon < ${d})`).join(' || ');
 export const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
 export const capitalizedFirst = s => (s ? s[0].toUpperCase() + s.slice(1) : s);
 
@@ -52,6 +71,21 @@ export async function loadHistory() {
     place: 'Lieu indiqué par Wikipédia et Wikidata', lat, lon, date, year,
     sourceName: 'Wikipédia · Wikidata',
     sourceURL: article ? 'https://fr.wikipedia.org/wiki/' + encodeURIComponent(article.replaceAll(' ', '_')) : `https://www.wikidata.org/wiki/Q${n}`,
+  }));
+}
+
+/** Outre-mer : histoire, catastrophes, émeutes et accidents (Wikipédia + Wikidata). */
+export async function loadOverseas() {
+  const rows = await getJSON('data/outremer.json?v=1');
+  return rows.map(([n, title, lat, lon, year, category, desc, article, approx]) => makeFact({
+    curated: true, overseas: true,
+    id: `wd-Q${n}`, title, category,
+    summary: desc ? capitalizedFirst(desc) + '.' : 'Ouvre la fiche pour lire le résumé de l’article.',
+    place: approx ? 'Événement étendu · épingle au centre du territoire' : 'Lieu indiqué par Wikipédia et Wikidata',
+    lat, lon, date: String(year), year, approx: !!approx,
+    approxNote: approx ? 'Événement étendu (cyclone, séisme…) : épingle au centre du territoire touché' : '',
+    sourceName: 'Wikipédia · Wikidata',
+    sourceURL: 'https://fr.wikipedia.org/wiki/' + encodeURIComponent((article || title).replaceAll(' ', '_')),
   }));
 }
 
@@ -105,7 +139,7 @@ const WIKIDATA_TYPES = (() => {
   add('Q318296 Q1371150', 'Enlèvement');
   add('Q168983 Q7625093 Q327541 Q350929 Q107434304', 'Incendie');
   add('Q179057 Q1362483', 'Explosion');
-  add('Q8065 Q8068 Q2369493 Q8070', 'Catastrophe naturelle');
+  add('Q8065 Q8068 Q2369493 Q8070 Q7944 Q7692360 Q8092', 'Catastrophe naturelle');
   add('Q1550225 Q12089136 Q68800046 Q1620824 Q977367 Q3193890', 'Catastrophe industrielle');
   add('Q9687 Q24871403 Q1339582 Q3305019 Q171558', 'Accident');
   add('Q906512 Q2620513', 'Naufrage');
@@ -146,13 +180,14 @@ function parseDate(raw) {
 const isPersonal = category => family(category) === 'crime' && !category.startsWith('Vol');
 const qid = uri => uri.split('/').pop();
 
-/** Événements datés et géolocalisés des types retenus, pour toute la France métropolitaine. */
+/** Événements datés et géolocalisés des types retenus, pour la métropole et l’outre-mer. */
 export async function fetchWikidataEvents() {
   const values = Object.keys(WIKIDATA_TYPES).map(id => `wd:${id}`).join(' ');
   const rows = await sparql(`SELECT ?e ?label ?desc ?coord ?date ?type ?article WHERE {
     VALUES ?type { ${values} }
     ?e wdt:P31 ?type ; wdt:P625 ?coord .
-    FILTER(geof:latitude(?coord) > 41.2 && geof:latitude(?coord) < 51.2 && geof:longitude(?coord) > -5.3 && geof:longitude(?coord) < 9.7)
+    BIND(geof:latitude(?coord) AS ?lat) BIND(geof:longitude(?coord) AS ?lon)
+    FILTER(${BOX_FILTER})
     OPTIONAL { ?e wdt:P585 ?d1 } OPTIONAL { ?e wdt:P580 ?d2 }
     BIND(COALESCE(?d1, ?d2) AS ?date) FILTER(BOUND(?date))
     ?e rdfs:label ?label FILTER(lang(?label) = "fr")
