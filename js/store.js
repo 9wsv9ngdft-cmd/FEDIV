@@ -52,8 +52,8 @@ export const carnet = {
 };
 
 // ───────────────────────── Sons ─────────────────────────
-// Banque de sons « enquête », synthétisée à la volée (aucun fichier à télécharger) :
-// clic de stylo, froissement de dossier, coup de tampon, radio de police, pin-pon discret.
+// Banque de sons « bureau du détective », synthétisée à la volée (aucun fichier à télécharger) :
+// machine à écrire (touches, frappe, retour chariot, sonnette), feuille, tiroir de classeur, tampon.
 // Tout passe par un filtre doux et un limiteur pour que rien ne soit agressif.
 
 let ctx = null;
@@ -64,7 +64,7 @@ function audio() {
     ctx = new (window.AudioContext || window.webkitAudioContext)();
     const soften = ctx.createBiquadFilter();
     soften.type = 'lowpass';
-    soften.frequency.value = 4200;
+    soften.frequency.value = 6500;
     const limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -22;
     limiter.ratio.value = 8;
@@ -114,58 +114,74 @@ function tone(t, { freq, to = freq, duration, type = 'sine', gain = 0.2, attack 
   o.stop(t + duration + 0.02);
 }
 
+const rand = (a, b) => a + Math.random() * (b - a);
+
+/** Une touche de machine à écrire : le « clac » métallique, le corps de la machine, le choc sourd. */
+function key(t, strength = 1) {
+  const v = rand(0.85, 1.15) * strength;
+  noise(t, { duration: 0.018, type: 'highpass', freq: rand(2800, 3600), gain: 0.32 * v, attack: 0.0008, curve: 5 });
+  noise(t + 0.002, { duration: 0.05, freq: rand(1600, 2200), q: 5, gain: 0.22 * v, attack: 0.001, curve: 4 });
+  tone(t, { freq: rand(150, 190), to: 90, duration: 0.06, gain: 0.22 * v, attack: 0.001 });
+}
+
+/** La petite sonnette de fin de ligne, métallique et brève. */
+function bell(t, gain = 0.09) {
+  tone(t, { freq: 2093, duration: 0.9, gain, attack: 0.002 });
+  tone(t, { freq: 2637, duration: 0.6, gain: gain * 0.5, attack: 0.002 });
+  tone(t, { freq: 4186, duration: 0.25, gain: gain * 0.25, attack: 0.002 });
+}
+
 const SOUNDS = {
-  // Clic de stylo-bille : deux petits clics feutrés.
-  tap(t) {
-    noise(t, { duration: 0.025, freq: 2600, q: 2.5, gain: 0.22, curve: 6 });
-    noise(t + 0.045, { duration: 0.02, freq: 1900, q: 2.5, gain: 0.12, curve: 6 });
+  // Une touche frappée.
+  key(t) { key(t); },
+  // Quelques mots tapés à la machine.
+  type(t) {
+    let at = t;
+    const n = 4 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) { key(at, i === n - 1 ? 1.1 : 0.9); at += rand(0.07, 0.13) + (Math.random() < 0.2 ? 0.08 : 0); }
   },
-  // Dossier qu'on ouvre : froissement de papier.
-  folder(t) {
-    const f = noise(t, { duration: 0.32, freq: 900, q: 0.7, gain: 0.16, attack: 0.06, curve: 1.6 });
-    f.frequency.setValueAtTime(700, t);
-    f.frequency.linearRampToValueAtTime(2200, t + 0.3);
+  // Retour du chariot : la sonnette, le cliquetis du cliquet, le choc en butée.
+  carriage(t) {
+    bell(t);
+    for (let i = 0; i < 14; i++) noise(t + 0.12 + i * 0.018, { duration: 0.012, type: 'highpass', freq: 2500, gain: 0.08, attack: 0.001, curve: 4 });
+    noise(t + 0.12, { duration: 0.28, freq: 900, q: 0.7, gain: 0.06, attack: 0.02, curve: 1.2 });
+    key(t + 0.4, 1.3);
   },
-  // Coup de tampon : un « toc » sourd sur le bureau.
+  // La sonnette seule.
+  ding(t) { bell(t, 0.11); },
+  // Une feuille qu'on glisse dans la machine (ou qu'on sort d'un dossier).
+  paper(t) {
+    const f = noise(t, { duration: 0.38, freq: 1400, q: 0.6, gain: 0.13, attack: 0.08, curve: 1.4 });
+    f.frequency.setValueAtTime(900, t);
+    f.frequency.linearRampToValueAtTime(3200, t + 0.35);
+    for (let i = 0; i < 5; i++) noise(t + 0.1 + i * 0.05, { duration: 0.015, type: 'highpass', freq: 3000, gain: 0.04, curve: 4 });
+  },
+  // Le tiroir du classeur qu'on ouvre : roulement puis butée.
+  drawer(t) {
+    noise(t, { duration: 0.32, type: 'lowpass', freq: 650, gain: 0.16, attack: 0.04, curve: 0.9 });
+    noise(t, { duration: 0.32, freq: 2400, q: 3, gain: 0.03, attack: 0.04, curve: 1 });
+    tone(t + 0.3, { freq: 120, to: 70, duration: 0.1, gain: 0.2, attack: 0.002 });
+    noise(t + 0.3, { duration: 0.04, freq: 1500, q: 2, gain: 0.08, curve: 4 });
+  },
+  // Coup de tampon encreur sur le dossier.
   stamp(t) {
-    tone(t, { freq: 150, to: 60, duration: 0.18, gain: 0.45, attack: 0.003 });
-    noise(t, { duration: 0.06, type: 'lowpass', freq: 900, gain: 0.25, curve: 4 });
-    noise(t + 0.01, { duration: 0.12, freq: 380, q: 1.2, gain: 0.12, curve: 2 });
+    tone(t, { freq: 140, to: 55, duration: 0.16, gain: 0.4, attack: 0.002 });
+    noise(t, { duration: 0.05, type: 'lowpass', freq: 1200, gain: 0.22, curve: 4 });
+    noise(t + 0.07, { duration: 0.03, freq: 2500, q: 2, gain: 0.05, curve: 3 });
   },
-  // Radio de police : grésillement, double bip discret, fin de transmission.
-  radio(t) {
-    noise(t, { duration: 0.12, freq: 1700, q: 0.8, gain: 0.09, attack: 0.01, curve: 0.8 });
-    tone(t + 0.13, { freq: 1046, duration: 0.09, type: 'triangle', gain: 0.07 });
-    tone(t + 0.25, { freq: 1318, duration: 0.11, type: 'triangle', gain: 0.07 });
-    noise(t + 0.4, { duration: 0.08, freq: 2200, q: 0.9, gain: 0.06, curve: 1 });
-  },
-  // Pin-pon à la française, tout bas et très court (435 / 580 Hz).
-  pinpon(t) {
-    for (let i = 0; i < 2; i++) {
-      tone(t + i * 0.44, { freq: 435, duration: 0.2, type: 'triangle', gain: 0.07, attack: 0.03 });
-      tone(t + i * 0.44 + 0.22, { freq: 580, duration: 0.2, type: 'triangle', gain: 0.07, attack: 0.03 });
-    }
-  },
-  // Bonne réponse : deux notes claires qui montent.
-  success(t) {
-    tone(t, { freq: 523, duration: 0.16, gain: 0.1 });
-    tone(t + 0.12, { freq: 784, duration: 0.3, gain: 0.1 });
-  },
-  // Mauvaise réponse : un « tss » grave, sans agresser.
-  fail(t) {
-    tone(t, { freq: 220, to: 165, duration: 0.28, type: 'triangle', gain: 0.1 });
-  },
+  // Mauvaise réponse : on barre à la machine (« xxx »).
+  strike(t) { key(t, 0.8); key(t + 0.09, 0.8); key(t + 0.18, 0.9); },
 };
 
 export const SOUND_NAMES = {
-  tap: 'Clic de stylo', folder: 'Dossier', stamp: 'Coup de tampon', radio: 'Radio de police',
-  pinpon: 'Pin-pon', success: 'Bonne réponse', fail: 'Mauvaise réponse',
+  key: 'Touche', type: 'Frappe', carriage: 'Retour chariot', ding: 'Sonnette',
+  paper: 'Feuille', drawer: 'Classeur', stamp: 'Tampon', strike: 'On barre',
 };
 
 export function playSound(kind, force = false) {
   if (!settings.sound && !force) return;
   try {
     const a = audio();
-    (SOUNDS[kind] ?? SOUNDS.tap)(a.currentTime + 0.01);
+    (SOUNDS[kind] ?? SOUNDS.key)(a.currentTime + 0.01);
   } catch { /* pas d'audio */ }
 }

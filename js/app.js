@@ -5,9 +5,9 @@ import {
   loadLocal, loadHistory, loadARIA, loadAriaDetail, fetchWikidataEvents, fetchWikidataLocatedEvents, fetchCatNat,
   fetchWikipediaSummary, communeAt, crimeRows, CRIME_RESOURCES, MONTHS,
 } from './sources.js?v=13';
-import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=13';
+import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=17';
 
-const APP_VERSION = 'version 1.4';
+const APP_VERSION = 'version 1.5';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -237,7 +237,7 @@ $('#rubricBar').addEventListener('click', e => {
   if (id === '*') state.hidden.clear();
   else if (state.hidden.has(id)) state.hidden.delete(id);
   else state.hidden.add(id);
-  playSound('tap');
+  playSound('key');
   ensureSourcesForFilters();
   refresh();
 });
@@ -249,7 +249,7 @@ $('#eraBar').addEventListener('click', e => {
   const chip = e.target.closest('[data-era]');
   if (!chip) return;
   state.era = ERAS.find(x => x.id === chip.dataset.era);
-  playSound('tap');
+  playSound('key');
   renderEraBar();
   refresh();
 });
@@ -292,7 +292,7 @@ function setStatus() {
 // ───────────────────────── Chronique ─────────────────────────
 
 const chronicle = $('#chronicle');
-$('#chronicleToggle').addEventListener('click', () => { chronicle.classList.toggle('open'); playSound('folder'); });
+$('#chronicleToggle').addEventListener('click', () => { chronicle.classList.toggle('open'); playSound('paper'); });
 chronicle.querySelector('.chronicle-head').addEventListener('click', () => {
   if (window.innerWidth < 900) chronicle.classList.toggle('open');
 });
@@ -329,7 +329,7 @@ $('#clippings').addEventListener('click', e => {
 
 function showTeaser(f) {
   state.selected = f;
-  playSound('tap');
+  playSound('key');
   const el = $('#teaser');
   const d = state.me ? ` · à ${distanceLabel(distance(state.me.lat, state.me.lon, f.lat, f.lon))}` : '';
   el.style.setProperty('--tint', RUBRIC_BY_ID[f.rubric].color);
@@ -364,7 +364,7 @@ function openSheet(html, onClose, view = '') {
   sheet.hidden = false;
   sheet.scrollTop = 0;
   sheetOnClose = onClose ?? null;
-  playSound('folder');
+  playSound(view === 'article' ? 'type' : 'paper');
   sheetInner.querySelectorAll('[data-close]').forEach(b => { b.onclick = closeSheet; });
 }
 function closeSheet() {
@@ -637,7 +637,7 @@ async function buildCircuit(theme) {
     c.index = (c.index + 1) % c.stops.length;
     e.target.textContent = `Étape ${c.index + 1}`;
   };
-  playSound('pinpon');
+  playSound('carriage');
 }
 
 function endCircuit() {
@@ -699,7 +699,7 @@ async function openQuiz(index = 0, score = 0) {
         if (Number(x.dataset.i) === q.answer) x.classList.add('right');
       });
       if (!right) b.classList.add('wrong');
-      playSound(right ? 'success' : 'fail');
+      playSound(right ? 'ding' : 'strike');
       $('#verdict').innerHTML = `<p class="stamp" style="margin-top:4px">${right ? 'Bien vu' : 'Raté'}</p><div class="article-body"><p>${esc(q.verdict)}</p></div>
         <div class="actions"><button class="btn primary" data-next>${index + 1 < quizCases.length ? 'Affaire suivante →' : 'Voir le score'}</button></div>`;
       $('#verdict [data-next]').onclick = () => openQuiz(index + 1, score + (right ? 1 : 0));
@@ -806,7 +806,7 @@ function toggleWalk() {
       banner.textContent = `Extra ! Extra ! À ${distanceLabel(bestD)} : ${best.title}`;
       banner.hidden = false;
       banner.onclick = () => { banner.hidden = true; showTeaser(best); };
-      playSound('radio');
+      playSound('ding');
       navigator.vibrate?.(200);
       setTimeout(() => { banner.hidden = true; }, 12000);
     }
@@ -817,7 +817,7 @@ function toggleWalk() {
 
 // ───────────────────────── Sommaire ─────────────────────────
 
-function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('folder'); }
+function openMenu() { $('#menu').hidden = false; $('#menuScrim').hidden = false; playSound('drawer'); }
 function closeMenu() { $('#menu').hidden = true; $('#menuScrim').hidden = true; }
 $('#menuBtn').addEventListener('click', openMenu);
 $('#menuScrim').addEventListener('click', closeMenu);
@@ -898,7 +898,7 @@ searchResults.addEventListener('click', e => {
   closeSearch();
   if (b.dataset.kind === 'place') {
     map.flyTo({ center: [Number(b.dataset.lon), Number(b.dataset.lat)], zoom: Number(b.dataset.zoom) });
-    playSound('tap');
+    playSound('carriage');
   } else {
     const f = state.facts.get(b.dataset.id);
     if (!f) return;
@@ -944,8 +944,8 @@ function openSettings() {
     });
   };
   bind('#setAppearance', 'appearance');
-  bind('#setSound', 'sound', 'checked', () => playSound('radio'));
-  bind('#setVolume', 'volume', 'value', () => playSound('tap'));
+  bind('#setSound', 'sound', 'checked', () => playSound('carriage'));
+  bind('#setVolume', 'volume', 'value', () => playSound('key'));
   bind('#setReading', 'readingSize');
   sheetInner.querySelectorAll('[data-sound]').forEach(b => { b.onclick = () => playSound(b.dataset.sound, true); });
   $('#setCarnet').onclick = openCarnet;
