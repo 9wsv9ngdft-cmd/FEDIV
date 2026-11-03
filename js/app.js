@@ -7,6 +7,9 @@ import {
 } from './sources.js?v=13';
 import { settings, carnet, playSound, SOUND_NAMES } from './store.js?v=13';
 
+const APP_VERSION = 'version 1.4';
+const APP_DATE = 'mise à jour du 3 novembre 2026';
+
 // ───────────────────────── Outils ─────────────────────────
 
 const $ = sel => document.querySelector(sel);
@@ -919,7 +922,7 @@ function openSettings() {
     <div class="settings-group"><h4>Son</h4>
       ${row('🔔', '#ff3b30', 'Bruitages', `<input type="checkbox" class="switch" id="setSound">`)}
       ${row('🔊', '#ff9500', 'Volume', `<input type="range" id="setVolume" min="0" max="1" step="0.05">`)}
-      <div class="setting sound-test"><span class="ico" style="background:#1f5fd1">🎧</span><span class="lbl">Écouter</span>
+      <div class="setting sound-test"><span class="ico" style="background:#1f5fd1">🎧</span><span class="lbl">Écouter les sons</span>
         <div class="sound-chips">${Object.entries(SOUND_NAMES).map(([k, v]) => `<button class="chip" data-sound="${k}">${v}</button>`).join('')}</div></div>
     </div>
     <div class="settings-group"><h4>Lecture</h4>
@@ -929,6 +932,7 @@ function openSettings() {
       ${row('📒', '#5856d6', 'Carnet d’enquêteur', `<button class="btn" id="setCarnet">Ouvrir</button>`)}
       ${row('ℹ', '#8e8e93', 'Sources et éthique', `<button class="btn" id="setAbout">Lire</button>`)}
     </div>
+    <p class="note"><b>Fediv ${APP_VERSION}</b> · ${APP_DATE}</p>
     <p class="note">Tout reste dans ce navigateur : pas de compte, pas de suivi. Ta position, si tu la partages, ne quitte pas ton appareil (seuls les arrêtés CatNat sont demandés autour du centre de la carte, arrondi à 1 km).</p>`);
   const bind = (id, key, prop = 'value', after = applyTheme) => {
     const el = $(id);
@@ -1012,7 +1016,7 @@ function hideSplash() {
   el.classList.add('gone');
   setTimeout(() => el.remove(), 600);
 }
-setTimeout(hideSplash, 6000); // au pire, on n'attend pas plus
+setTimeout(hideSplash, 2500); // au pire, on n'attend pas plus
 
 function updateOnline() { $('#offlineBanner').hidden = navigator.onLine; }
 window.addEventListener('online', updateOnline);
@@ -1043,7 +1047,9 @@ $('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 
 
 async function start() {
   const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
-  Promise.all([base, new Promise(r => (mapReady ? r() : map.once('load', r)))]).then(() => setTimeout(hideSplash, 250));
+  // On n'attend pas les tuiles de la carte : dès que le style et les récits sont prêts, on ouvre.
+  const styleReady = new Promise(r => (map.isStyleLoaded() ? r() : map.once('style.load', r)));
+  Promise.all([base, styleReady]).then(hideSplash);
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
   setTimeout(async () => {
     await track('wikidata', fetchWikidataEvents().then(addFacts).catch(() => toast('Wikidata ne répond pas : une partie des affaires manquera pour l’instant.')));

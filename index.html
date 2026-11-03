@@ -28,7 +28,10 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&family=Special+Elite&family=Permanent+Marker&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&family=Special+Elite&family=Permanent+Marker&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Oswald:wght@500;700&family=Special+Elite&family=Permanent+Marker&family=Inter:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://data.geopf.fr">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
   <link href="css/style.css?v=15" rel="stylesheet">
 </head>
@@ -119,6 +122,6 @@
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=14"></script>
+  <script type="module" src="js/app.js?v=15"></script>
 </body>
 </html>
