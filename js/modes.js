@@ -81,6 +81,11 @@ export function setLight(mode) {
   if (ctx.mapReady()) {
     if (mode === 'uv') ensureLuminolLayers();
     for (const id of ['luminol-glow', 'luminol-spots']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode === 'uv' ? 'visible' : 'none');
+    // En lumière UV, seules les traces comptent : on range les épingles habituelles.
+    const heat = ctx.state.heat;
+    for (const id of ['clusters', 'cluster-count']) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', mode === 'uv' || heat ? 'none' : 'visible');
+    if (map.getLayer('points')) map.setLayoutProperty('points', 'visibility', mode === 'uv' ? 'none' : 'visible');
+    if (map.getLayer('heat')) map.setLayoutProperty('heat', 'visibility', heat && mode !== 'uv' ? 'visible' : 'none');
   }
   if (mode === 'torch') ctx.toast('Lampe torche : promène ton doigt sur la carte');
   if (mode === 'uv') ctx.toast('Luminol : la lumière UV révèle les crimes en bleu');
