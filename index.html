@@ -33,15 +33,20 @@
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="preconnect" href="https://data.geopf.fr">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
-  <link href="css/style.css?v=23" rel="stylesheet">
+  <link href="css/style.css?v=24" rel="stylesheet">
 </head>
 <body>
-  <!-- Écran d'ouverture -->
-  <div class="splash" id="splash" role="status" aria-live="polite">
-    <img src="icons/icon-192.png?v=2" alt="" width="96" height="96">
-    <div class="splash-name">FEDIV</div>
-    <div class="splash-gyro"></div>
-    <p class="splash-text">Ouverture du dossier…</p>
+  <!-- Écran d'ouverture : gyrophare, rubalises, épingle, nom tapé à la machine -->
+  <div class="splash" id="splash" role="status" aria-label="Ouverture de Fediv">
+    <div class="splash-lights" aria-hidden="true"><span class="b"></span><span class="r"></span></div>
+    <div class="splash-tape t1" aria-hidden="true"><span>SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR —</span></div>
+    <div class="splash-tape t2" aria-hidden="true"><span>NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME — NE PAS FRANCHIR — SCÈNE DE CRIME —</span></div>
+    <div class="splash-core">
+      <img class="splash-icon" src="icons/icon-192.png?v=2" alt="" width="104" height="104">
+      <div class="splash-name" aria-label="Fediv"><span>F</span><span>E</span><span>D</span><span>I</span><span>V</span></div>
+      <div class="splash-gyro"></div>
+      <p class="splash-text">Les faits divers autour de vous</p>
+    </div>
   </div>
 
   <div id="map" role="application" aria-label="Carte des faits divers"></div>
@@ -141,6 +146,6 @@
   <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-  <script type="module" src="js/app.js?v=32"></script>
+  <script type="module" src="js/app.js?v=33"></script>
 </body>
 </html>

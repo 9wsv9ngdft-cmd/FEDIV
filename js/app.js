@@ -8,7 +8,7 @@ import {
 import { settings, carnet, board, playSound, SOUND_NAMES } from './store.js?v=25';
 import { initModes, lightRefresh, openCompass, openStakeout, setShake } from './modes.js?v=32';
 
-const APP_VERSION = 'version 1.10';
+const APP_VERSION = 'version 1.11';
 const APP_DATE = 'mise à jour du 3 novembre 2026';
 
 // ───────────────────────── Outils ─────────────────────────
@@ -1350,13 +1350,25 @@ applyTheme();
 renderEraBar();
 renderRubricBar();
 
-function hideSplash() {
+// Animation d'ouverture : complète à la première visite de la session (≈ 2,3 s), express ensuite.
+const splashEl = $('#splash');
+const splashQuick = (() => { try { return sessionStorage.getItem('fediv.opened') === '1'; } catch { return false; } })();
+if (splashQuick) splashEl?.classList.add('quick');
+try { sessionStorage.setItem('fediv.opened', '1'); } catch { /* navigation privée */ }
+const splashMin = splashQuick ? 450 : 2300;
+const splashStart = performance.now();
+let splashReady = false;
+
+function hideSplash(force = false) {
   const el = $('#splash');
   if (!el || el.classList.contains('gone')) return;
+  const wait = splashMin - (performance.now() - splashStart);
+  if (!force && wait > 0) { setTimeout(() => hideSplash(), wait); return; }
   el.classList.add('gone');
-  setTimeout(() => el.remove(), 600);
+  setTimeout(() => el.remove(), 900);
 }
-setTimeout(hideSplash, 2500); // au pire, on n'attend pas plus
+splashEl?.addEventListener('click', () => hideSplash(true)); // un toucher pour passer
+setTimeout(() => hideSplash(true), 6000); // au pire, on n'attend pas plus
 
 function updateOnline() { $('#offlineBanner').hidden = navigator.onLine; }
 window.addEventListener('online', updateOnline);
@@ -1398,7 +1410,7 @@ if (settings.shake) {
 async function start() {
   const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
   // On n'attend pas la carte (elle se dessine au fur et à mesure) : dès que les récits sont prêts, on ouvre.
-  base.then(hideSplash);
+  base.then(() => hideSplash());
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
   setTimeout(async () => {
     await track('wikidata', fetchWikidataEvents().then(addFacts).catch(() => toast('Wikidata ne répond pas : une partie des affaires manquera pour l’instant.')));
