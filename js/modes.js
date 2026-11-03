@@ -80,9 +80,10 @@ export function setLight(mode) {
   const { map } = ctx;
   // Lampe allumée : un doigt promène la lumière sans bouger la carte ; deux doigts la déplacent.
   try {
-    if (mode !== 'off') map.cooperativeGestures.enable(); else map.cooperativeGestures.disable();
-    if (mode !== 'off') map.dragPan.disable(); else map.dragPan.enable();
-    if (mode !== 'off' && window.matchMedia('(pointer: coarse)').matches) map.dragPan.enable();
+    const touch = window.matchMedia('(pointer: coarse)').matches;
+    if (mode === 'off') { map.cooperativeGestures.disable(); map.dragPan.enable(); }
+    else if (touch) map.cooperativeGestures.enable(); // un doigt : la lumière ; deux doigts : la carte
+    else map.dragPan.disable(); // à la souris : on éclaire en survolant, la molette zoome toujours
   } catch { /* ancienne version de la carte */ }
   // Sous le faisceau, de légères traces bleues révèlent les lieux de crimes (façon Luminol).
   if (ctx.mapReady()) {
