@@ -1047,9 +1047,8 @@ $('.masthead-title').addEventListener('click', () => map.flyTo({ center: [2.45, 
 
 async function start() {
   const base = track('local', Promise.all([loadLocal(), loadHistory()]).then(([a, b]) => { addFacts(a); addFacts(b); }));
-  // On n'attend pas les tuiles de la carte : dès que le style et les récits sont prêts, on ouvre.
-  const styleReady = new Promise(r => (map.isStyleLoaded() ? r() : map.once('style.load', r)));
-  Promise.all([base, styleReady]).then(hideSplash);
+  // On n'attend pas la carte (elle se dessine au fur et à mesure) : dès que les récits sont prêts, on ouvre.
+  base.then(hideSplash);
   // Wikidata en arrière-plan : prêt quand on coche Crimes, Accidents, Attentats…
   setTimeout(async () => {
     await track('wikidata', fetchWikidataEvents().then(addFacts).catch(() => toast('Wikidata ne répond pas : une partie des affaires manquera pour l’instant.')));
