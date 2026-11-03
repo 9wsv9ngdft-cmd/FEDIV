@@ -2,7 +2,7 @@
 // Fichiers du site : servis depuis le cache puis rafraîchis en arrière-plan.
 // Page d'accueil : réseau d'abord (pour recevoir les mises à jour), cache en secours.
 
-const CACHE = 'fediv-v1';
+const CACHE = 'fediv-v2';
 const SHELL = [
   './',
   'index.html',
