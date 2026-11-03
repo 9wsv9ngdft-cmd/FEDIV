@@ -19,7 +19,8 @@ function bearing(a, b) {
   const x = Math.cos(toRad(a.lat)) * Math.sin(toRad(b.lat)) - Math.sin(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.cos(toRad(b.lon - a.lon));
   return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
 }
-const cardinal = d => ['nord', 'nord-est', 'est', 'sud-est', 'sud', 'sud-ouest', 'ouest', 'nord-ouest'][Math.round(d / 45) % 8];
+/** « vers le nord », « vers l'est »… */
+const cardinal = d => ['le nord', 'le nord-est', 'l’est', 'le sud-est', 'le sud', 'le sud-ouest', 'l’ouest', 'le nord-ouest'][Math.round(d / 45) % 8];
 
 // ───────────────────────── Lampe torche et Luminol ─────────────────────────
 
@@ -143,7 +144,7 @@ function renderCompass() {
   box.querySelector('.compass-rose').style.transform = `rotate(${c.heading == null ? 0 : -c.heading}deg)`;
   box.querySelector('.compass-dist').textContent = ctx.distanceLabel(d);
   box.querySelector('.compass-title').textContent = f.title;
-  box.querySelector('.compass-meta').textContent = `${f.category} · ${f.date} · vers le ${cardinal(b)}`;
+  box.querySelector('.compass-meta').textContent = `${f.category} · ${f.date} · vers ${cardinal(b)}`;
   box.querySelector('.compass-hint').textContent = c.heading == null
     ? 'Boussole indisponible : la flèche indique la direction par rapport au nord (en haut).'
     : 'Tiens le téléphone à plat devant toi et suis la flèche.';
@@ -257,7 +258,7 @@ async function stakeoutShow() {
   const token = (s.token = (s.token || 0) + 1);
   const d = ctx.distance(s.at.lat, s.at.lon, f.lat, f.lon);
   box.querySelector('.stake-count').textContent = `Affaire ${s.index + 1} sur ${s.list.length}`;
-  box.querySelector('.stake-meta').textContent = `${f.category} · ${f.date} · à ${ctx.distanceLabel(d)}, vers le ${cardinal(bearing(s.at, f))}`;
+  box.querySelector('.stake-meta').textContent = `${f.category} · ${f.date} · à ${ctx.distanceLabel(d)}, vers ${cardinal(bearing(s.at, f))}`;
   box.querySelector('.stake-title').textContent = f.title;
   box.querySelector('.stake-text').textContent = '…';
   box.querySelector('[data-pause]').textContent = s.paused ? '▶ Reprendre' : '⏸ Pause';
