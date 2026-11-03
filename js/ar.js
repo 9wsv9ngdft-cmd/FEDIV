@@ -208,7 +208,7 @@ function frame() {
   if (!ar.manualUntil || Date.now() > ar.manualUntil) setLock(best);
   const lock = ar.locked && !ar.locked.node.classList.contains('off') ? ar.locked : null;
   reticle.style.transform = lock
-    ? `translate(${lock.sx}px, ${lock.sy - 34}px) translate(-50%, -50%) scale(.72)`
+    ? `translate(${lock.sx}px, ${lock.sy - 40}px) translate(-50%, -50%) scale(.72)`
     : `translate(${w / 2}px, ${h / 2}px) translate(-50%, -50%)`;
   ar.el.querySelector('.ar-edge.l').textContent = left ? `◀ ${left}` : '';
   ar.el.querySelector('.ar-edge.r').textContent = right ? `${right} ▶` : '';

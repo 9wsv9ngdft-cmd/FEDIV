@@ -657,13 +657,13 @@ button:focus:not(:focus-visible) { outline: none; }
 .ar-marks { position: absolute; inset: 0; z-index: 3; }
 .ar-mark { position: absolute; left: 0; top: 0; border: 0; background: none; padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; will-change: transform; transition: opacity .25s; color: inherit; font: inherit; }
 .ar-mark.off { opacity: 0; pointer-events: none; }
-.ar-tent { position: relative; width: 64px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+.ar-tent { position: relative; width: 76px; height: 70px; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: linear-gradient(180deg, #ffd43b, #f2b705); clip-path: polygon(14% 0, 86% 0, 100% 100%, 0 100%); filter: drop-shadow(0 6px 8px rgba(0,0,0,.6)); }
 .ar-tent::after { content: ''; position: absolute; left: 0; right: 0; bottom: 9px; height: 3px; background: var(--tint); opacity: .9; }
-.ar-num { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 31px; line-height: 1; color: #111; margin-top: 2px; }
+.ar-num { font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 37px; line-height: 1; color: #111; margin-top: 2px; }
 .ar-ico { font-size: 13px; line-height: 1; margin-top: -1px; margin-bottom: 8px; }
 .ar-pole { width: 2px; height: 18px; background: linear-gradient(#f2b705, rgba(242,183,5,0)); }
-.ar-shadow { width: 46px; height: 10px; margin-top: -4px; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.65), transparent 70%); }
+.ar-shadow { width: 56px; height: 10px; margin-top: -4px; border-radius: 50%; background: radial-gradient(rgba(0,0,0,.65), transparent 70%); }
 .ar-dist { margin-top: 3px; font-family: 'Oswald', sans-serif; font-weight: 700; font-size: 13px; color: #f5c518; background: rgba(0,0,0,.72); padding: 1px 7px; border-radius: 2px; letter-spacing: .5px; }
 .ar-mark.locked .ar-tent { background: linear-gradient(180deg, #ff6b57, #c8261a); }
 .ar-mark.locked .ar-num { color: #fff; }
